@@ -22,3 +22,11 @@ audio-mode MODE="show" ARGS="":
 # Build playlists from newline-delimited Mopidy URIs
 playlist-from-list NAME INPUT="-" ARGS="":
   ./scripts/playlist-from-list {{NAME}} --input {{INPUT}} {{ARGS}}
+
+# Start recording via pw-record
+rec-start ARGS="":
+  ./scripts/rec-start {{ARGS}}
+
+# Stop recording process
+rec-stop ARGS="":
+  ./scripts/rec-stop {{ARGS}}

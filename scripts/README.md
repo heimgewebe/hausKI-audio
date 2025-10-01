@@ -34,3 +34,27 @@ Optionen:
 - `--replace` bestehende Playlist gleichen Namens leeren & überschreiben
 - `--rpc-url` Ziel-Endpunkt (`http://127.0.0.1:6680/mopidy/rpc`)
 - `--dry-run` nur anzeigen, wie viele Tracks gesendet würden
+
+## rec-start / rec-stop
+
+```
+./rec-start --rate 96000 --channels 2
+./rec-start --device alsa_output.usb-MOTU.M2-00.pro-output-0 --extra --latency=128
+./rec-stop                 # schickt SIGINT, wartet 5s, räumt PID-Datei auf
+./rec-stop --force         # eskaliert zu SIGKILL, falls nötig
+```
+
+`rec-start` nutzt `pw-record` (PipeWire) und legt die PID in `~/.cache/hauski-audio/recording.pid`. Standardziel ist `$AUDIO_RECORD_DIR` (Default `~/Music/Recordings`) mit Zeitstempel und `.wav`-Extension.
+
+Optionen (`rec-start`):
+- `--output` fixer Dateiname (sonst Auto-Name)
+- `--rate`, `--channels`, `--format` → direkt an `pw-record`
+- `--device` PipeWire-Node (→ `--target`)
+- `--pw-binary` alternativer Befehl (Default `pw-record`)
+- `--extra` zusätzliche Argumente (mehrfach möglich)
+- `--force` räumt verwaiste PID-Dateien, ohne laufende Aufnahme
+
+Optionen (`rec-stop`):
+- `--signal` Grundsignal (`INT`/`TERM`/`KILL`)
+- `--timeout` Wartezeit vor Eskalation
+- `--force` sende am Ende `SIGKILL`, falls nötig

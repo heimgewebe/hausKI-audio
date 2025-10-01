@@ -16,3 +16,7 @@
 - Komfort: Pulse → `output = pulsesink`
 - Bitperfect: ALSA → `output = alsasink device=hw:<M2>,0`
 - Nach Änderung: `systemctl --user restart mopidy`
+
+## Aufnahme
+- `just rec-start ARGS="--rate 96000"` startet PipeWire Aufnahme (pw-record).
+- `just rec-stop` beendet und räumt PID-Datei in `~/.cache/hauski-audio/`.

@@ -16,6 +16,7 @@
 - Installiere `just` (z. B. `cargo install just`) und nutze `just lint` für lokale Docs-Checks.
 - `just audio-mode MODE=alsa ARGS="--restart"` um das Helper-Skript bequem auszuführen.
 - `just playlist-from-list NAME="HiRes Night" INPUT=tracks.txt ARGS="--replace"` baut Playlists aus URI-Listen.
+- `just rec-start ARGS="--rate 192000 --channels 2"` startet die Aufnahme (`rec-stop` beendet sie).
 - Kopiere `.env.example` nach `.env` und pflege Mopidy/Qobuz-URLs & Pfade lokal.
 
 ## Status

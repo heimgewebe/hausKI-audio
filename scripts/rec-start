@@ -1,0 +1,145 @@
+#!/usr/bin/env python3
+"""Start a long-running audio capture using PipeWire's pw-record."""
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import os
+import subprocess
+from pathlib import Path
+
+STATE_DIR = Path.home() / ".cache" / "hauski-audio"
+PID_FILE = STATE_DIR / "recording.pid"
+DEFAULT_RECORD_DIR = Path(os.environ.get("AUDIO_RECORD_DIR", "~/Music/Recordings")).expanduser()
+DEFAULT_EXTENSION = os.environ.get("AUDIO_RECORD_EXT", "wav")
+
+
+def ensure_state_dir() -> None:
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def running_pid() -> int | None:
+    if PID_FILE.exists():
+        try:
+            pid = int(PID_FILE.read_text().strip())
+        except ValueError:
+            PID_FILE.unlink(missing_ok=True)
+            return None
+        if pid <= 0:
+            PID_FILE.unlink(missing_ok=True)
+            return None
+        try:
+            os.kill(pid, 0)
+        except OSError:
+            PID_FILE.unlink(missing_ok=True)
+            return None
+        return pid
+    return None
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Launch pw-record to capture audio until rec-stop is invoked.",
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        help="Output file path. Defaults to AUDIO_RECORD_DIR/recording-<timestamp>.wav.",
+    )
+    parser.add_argument(
+        "--rate",
+        type=int,
+        default=96000,
+        help="Sample rate in Hz (default: 96000).",
+    )
+    parser.add_argument(
+        "--channels",
+        type=int,
+        default=2,
+        help="Channel count (default: 2).",
+    )
+    parser.add_argument(
+        "--format",
+        default="S24_LE",
+        help="Sample format passed to pw-record (default: S24_LE).",
+    )
+    parser.add_argument(
+        "--device",
+        help="Optional PipeWire node target (passes --target to pw-record).",
+    )
+    parser.add_argument(
+        "--pw-binary",
+        default=os.environ.get("PW_RECORD_BINARY", "pw-record"),
+        help="Alternate pw-record binary (default: pw-record).",
+    )
+    parser.add_argument(
+        "--extra",
+        action="append",
+        default=[],
+        help="Additional arguments forwarded to pw-record (repeatable).",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Overwrite existing PID state if recorder looks stale.",
+    )
+    return parser.parse_args()
+
+
+def resolve_output(path_arg: str | None) -> Path:
+    if path_arg:
+        path = Path(path_arg).expanduser()
+    else:
+        DEFAULT_RECORD_DIR.mkdir(parents=True, exist_ok=True)
+        timestamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+        path = DEFAULT_RECORD_DIR / f"recording-{timestamp}.{DEFAULT_EXTENSION}"
+    if path.exists():
+        raise SystemExit(f"Output file already exists: {path}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def build_command(args: argparse.Namespace, output: Path) -> list[str]:
+    cmd = [args.pw_binary, "--rate", str(args.rate), "--channels", str(args.channels), "--format", args.format]
+    if args.device:
+        cmd.extend(["--target", args.device])
+    if args.extra:
+        cmd.extend(args.extra)
+    cmd.append(str(output))
+    return cmd
+
+
+def launch(cmd: list[str]) -> int:
+    try:
+        proc = subprocess.Popen(cmd)
+    except FileNotFoundError as exc:
+        raise SystemExit(f"Unable to launch {cmd[0]}: {exc}") from exc
+    except Exception as exc:  # pragma: no cover - defensive
+        raise SystemExit(f"Failed to start recorder: {exc}") from exc
+    return proc.pid
+
+
+def ensure_stopped(force: bool) -> None:
+    pid = running_pid()
+    if pid is None:
+        return
+    if not force:
+        raise SystemExit(
+            f"Recording already running (pid {pid}). Use rec-stop first or pass --force to clear stale state."
+        )
+    PID_FILE.unlink(missing_ok=True)
+
+
+def main() -> None:
+    args = parse_args()
+    ensure_state_dir()
+    ensure_stopped(args.force)
+    output = resolve_output(args.output)
+    cmd = build_command(args, output)
+    pid = launch(cmd)
+    PID_FILE.write_text(f"{pid}\n")
+    print(f"Recording started (pid {pid}) → {output}")
+
+
+if __name__ == "__main__":
+    main()
