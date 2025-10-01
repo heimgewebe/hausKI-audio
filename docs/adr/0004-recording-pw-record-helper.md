@@ -10,6 +10,7 @@ Wir benötigen reproduzierbare Aufnahmen in Hi-Res-Qualität (MOTU M2), die sowo
 - Ergänzen Runbook mit Workflow, optionalen Flags und Troubleshooting.
 
 ## Konsequenzen
++ Smoke-Test `just rec-smoke` prüft Skripte ohne Audio.
 + Konsistenter CLI-Workflow (Start/Stop, Auto-Dateinamen, Force-Option).
 + Einfaches Wiederverwenden per `just rec-start`/`just rec-stop`.
 + Trouble-Shooting & Monitoring (pw-top, soxi) dokumentiert.

@@ -40,6 +40,8 @@ Optionen:
 ```
 ./rec-start --rate 96000 --channels 2
 ./rec-start --device alsa_output.usb-MOTU.M2-00.pro-output-0 --extra --latency=128
+./rec-start --dry-run --json        # Smoke-Test ohne Aufnahme
+./rec-stop --dry-run --json         # zeigt Signalplan (greift nicht ein)
 ./rec-stop                 # schickt SIGINT, wartet 5s, räumt PID-Datei auf
 ./rec-stop --force         # eskaliert zu SIGKILL, falls nötig
 ```
@@ -53,8 +55,12 @@ Optionen (`rec-start`):
 - `--pw-binary` alternativer Befehl (Default `pw-record`)
 - `--extra` zusätzliche Argumente (mehrfach möglich)
 - `--force` räumt verwaiste PID-Dateien, ohne laufende Aufnahme
+- `--dry-run` zeigt Kommando & Ziel, startet nichts (`--json` für maschinenlesbar)
 
 Optionen (`rec-stop`):
 - `--signal` Grundsignal (`INT`/`TERM`/`KILL`)
 - `--timeout` Wartezeit vor Eskalation
 - `--force` sende am Ende `SIGKILL`, falls nötig
+- `--dry-run`/`--json` zeigen den Signalplan ohne Prozesszugriff
+
+**Smoke-Test:** `just rec-smoke` führt beide Skripte im Dry-Run aus (CI-freundlich, kein Audio nötig).

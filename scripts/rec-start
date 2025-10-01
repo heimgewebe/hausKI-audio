@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -12,6 +13,10 @@ STATE_DIR = Path.home() / ".cache" / "hauski-audio"
 PID_FILE = STATE_DIR / "recording.pid"
 DEFAULT_RECORD_DIR = Path(os.environ.get("AUDIO_RECORD_DIR", "~/Music/Recordings")).expanduser()
 DEFAULT_EXTENSION = os.environ.get("AUDIO_RECORD_EXT", "wav")
+
+
+class RecorderStateError(RuntimeError):
+    pass
 
 
 def ensure_state_dir() -> None:
@@ -83,6 +88,16 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Overwrite existing PID state if recorder looks stale.",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print resolved command and exit without launching pw-record.",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit dry-run details as JSON (only with --dry-run).",
+    )
     return parser.parse_args()
 
 
@@ -94,7 +109,7 @@ def resolve_output(path_arg: str | None) -> Path:
         timestamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
         path = DEFAULT_RECORD_DIR / f"recording-{timestamp}.{DEFAULT_EXTENSION}"
     if path.exists():
-        raise SystemExit(f"Output file already exists: {path}")
+        raise RecorderStateError(f"Output file already exists: {path}")
     path.parent.mkdir(parents=True, exist_ok=True)
     return path
 
@@ -113,9 +128,9 @@ def launch(cmd: list[str]) -> int:
     try:
         proc = subprocess.Popen(cmd)
     except FileNotFoundError as exc:
-        raise SystemExit(f"Unable to launch {cmd[0]}: {exc}") from exc
+        raise RecorderStateError(f"Unable to launch {cmd[0]}: {exc}") from exc
     except Exception as exc:  # pragma: no cover - defensive
-        raise SystemExit(f"Failed to start recorder: {exc}") from exc
+        raise RecorderStateError(f"Failed to start recorder: {exc}") from exc
     return proc.pid
 
 
@@ -124,7 +139,7 @@ def ensure_stopped(force: bool) -> None:
     if pid is None:
         return
     if not force:
-        raise SystemExit(
+        raise RecorderStateError(
             f"Recording already running (pid {pid}). Use rec-stop first or pass --force to clear stale state."
         )
     PID_FILE.unlink(missing_ok=True)
@@ -133,10 +148,32 @@ def ensure_stopped(force: bool) -> None:
 def main() -> None:
     args = parse_args()
     ensure_state_dir()
-    ensure_stopped(args.force)
-    output = resolve_output(args.output)
-    cmd = build_command(args, output)
-    pid = launch(cmd)
+    try:
+        ensure_stopped(args.force)
+        output = resolve_output(args.output)
+        cmd = build_command(args, output)
+    except RecorderStateError as exc:
+        print(str(exc))
+        raise SystemExit(1) from exc
+
+    if args.dry_run:
+        payload = {
+            "output": str(output),
+            "command": cmd,
+            "binary": cmd[0],
+        }
+        if args.json:
+            print(json.dumps(payload, indent=2))
+        else:
+            print(f"Would run: {' '.join(cmd)}")
+            print(f"Output file: {output}")
+        return
+
+    try:
+        pid = launch(cmd)
+    except RecorderStateError as exc:
+        print(str(exc))
+        raise SystemExit(1) from exc
     PID_FILE.write_text(f"{pid}\n")
     print(f"Recording started (pid {pid}) → {output}")
 

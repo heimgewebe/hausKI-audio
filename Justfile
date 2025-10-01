@@ -30,3 +30,8 @@ rec-start ARGS="":
 # Stop recording process
 rec-stop ARGS="":
   ./scripts/rec-stop {{ARGS}}
+
+# Smoke test the recording scripts without launching pw-record
+rec-smoke:
+  ./scripts/rec-start --dry-run --json
+  ./scripts/rec-stop --dry-run --json || true

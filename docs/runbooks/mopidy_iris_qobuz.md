@@ -25,6 +25,7 @@
 5. Aufnahme validieren:
    - `pw-top` oder `pw-cli ls Node` zur Live-Überwachung.
    - `soxi <file>` / `mediainfo <file>` für Sample-Rate & Format.
+   - `just rec-smoke` für Smoke-Test ohne aktive Aufnahme.
 
 ## Aufnahme-Optionen
 - Sample-Format: `--format S32_LE` für 32-Bit float; Default `S24_LE`.

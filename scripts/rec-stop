@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import signal
 import time
@@ -10,6 +11,10 @@ from pathlib import Path
 
 STATE_DIR = Path.home() / ".cache" / "hauski-audio"
 PID_FILE = STATE_DIR / "recording.pid"
+
+
+class RecorderStateError(RuntimeError):
+    pass
 
 
 def parse_args() -> argparse.Namespace:
@@ -31,17 +36,27 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="If recorder ignores the primary signal, escalate to SIGKILL at the end of timeout.",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Output the signal plan without touching the process.",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit dry-run details as JSON (only with --dry-run).",
+    )
     return parser.parse_args()
 
 
 def read_pid() -> int:
     if not PID_FILE.exists():
-        raise SystemExit("No recorder PID state found. Is rec-start running?")
+        raise RecorderStateError("No recorder PID state found. Is rec-start running?")
     try:
         pid = int(PID_FILE.read_text().strip())
     except ValueError:
         PID_FILE.unlink(missing_ok=True)
-        raise SystemExit("PID file contained invalid data; cleared stale state.")
+        raise RecorderStateError("PID file contained invalid data; cleared stale state.")
     return pid
 
 
@@ -60,7 +75,7 @@ def send_signal(pid: int, signame: str) -> None:
     except ProcessLookupError:
         pass
     except PermissionError as exc:
-        raise SystemExit(f"Not permitted to signal process {pid}: {exc}") from exc
+        raise RecorderStateError(f"Not permitted to signal process {pid}: {exc}")
 
 
 def wait_exit(pid: int, timeout: float) -> bool:
@@ -74,28 +89,50 @@ def wait_exit(pid: int, timeout: float) -> bool:
 
 def main() -> None:
     args = parse_args()
-    pid = read_pid()
+    try:
+        pid = read_pid()
+    except RecorderStateError as exc:
+        print(str(exc))
+        raise SystemExit(1) from exc
+
     if not process_alive(pid):
         PID_FILE.unlink(missing_ok=True)
         print("Recorder already stopped; cleared stale PID file.")
         return
 
-    send_signal(pid, args.signal)
-    if wait_exit(pid, args.timeout):
-        PID_FILE.unlink(missing_ok=True)
-        print(f"Recorder {pid} stopped.")
+    if args.dry_run:
+        payload = {
+            "pid": pid,
+            "signal": args.signal,
+            "timeout": args.timeout,
+            "force": args.force,
+        }
+        if args.json:
+            print(json.dumps(payload, indent=2))
+        else:
+            print(f"Plan: send SIG{args.signal} to {pid}, wait {args.timeout}s, force={args.force}")
         return
 
-    if args.force:
-        print(f"Recorder {pid} ignored SIG{args.signal}; sending SIGKILL.")
-        send_signal(pid, "KILL")
-        wait_exit(pid, 1.0)
-        PID_FILE.unlink(missing_ok=True)
-        print(f"Recorder {pid} killed.")
-    else:
-        raise SystemExit(
-            f"Recorder {pid} did not exit within {args.timeout}s. Re-run with --force to kill hard."
-        )
+    try:
+        send_signal(pid, args.signal)
+        if wait_exit(pid, args.timeout):
+            PID_FILE.unlink(missing_ok=True)
+            print(f"Recorder {pid} stopped.")
+            return
+
+        if args.force:
+            print(f"Recorder {pid} ignored SIG{args.signal}; sending SIGKILL.")
+            send_signal(pid, "KILL")
+            wait_exit(pid, 1.0)
+            PID_FILE.unlink(missing_ok=True)
+            print(f"Recorder {pid} killed.")
+        else:
+            raise RecorderStateError(
+                f"Recorder {pid} did not exit within {args.timeout}s. Re-run with --force to kill hard."
+            )
+    except RecorderStateError as exc:
+        print(str(exc))
+        raise SystemExit(1) from exc
 
 
 if __name__ == "__main__":
