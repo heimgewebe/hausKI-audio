@@ -5,6 +5,11 @@ default: lint
 # Run all available lint targets
 lint: lint-docs lint-yaml
 
+# Run Python unit tests
+test:
+  command -v pytest >/dev/null || { echo "missing pytest (pip install pytest)" >&2; exit 1; }
+  pytest -q
+
 # Lint Markdown docs to mirror CI
 lint-docs:
   command -v markdownlint-cli2 >/dev/null || { echo "missing markdownlint-cli2 (npm i -g markdownlint-cli2)" >&2; exit 1; }

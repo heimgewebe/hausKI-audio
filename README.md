@@ -14,6 +14,7 @@
 
 ## Developer Comfort
 - Installiere `just` (z. B. `cargo install just`) und nutze `just lint` für lokale Docs-Checks.
+- `just test` führt die Pytest-Suite im Repo aus.
 - `just audio-mode MODE=alsa ARGS="--restart"` um das Helper-Skript bequem auszuführen.
 - `just playlist-from-list NAME="HiRes Night" INPUT=tracks.txt ARGS="--replace"` baut Playlists aus URI-Listen.
 - `just rec-start ARGS="--rate 192000 --channels 2"` startet die Aufnahme (`rec-stop` beendet sie).

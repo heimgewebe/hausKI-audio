@@ -18,5 +18,5 @@ Wir benötigen reproduzierbare Aufnahmen in Hi-Res-Qualität (MOTU M2), die sowo
 – Python-Skripte müssen gepflegt werden (Permissions, Signal-Handling).
 
 ## Nächste Schritte
-- Ergänzen Tests (z. B. unit-test der PID-Logik) oder Smoke-Test-Just-Targets.
+- Pytest-Suite (`just test`) pflegen, zusätzliche Cases (z. B. Fehlerpfade) ergänzen.
 - Überlegen, ob ALSA-Fallback (`arecord`) nötig wird (z. B. für minimalistische Systeme).
