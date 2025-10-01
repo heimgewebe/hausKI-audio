@@ -18,3 +18,7 @@ lint-yaml:
 # Convenience wrapper for the audio-mode helper
 audio-mode MODE="show" ARGS="":
   ./scripts/audio-mode {{MODE}} {{ARGS}}
+
+# Build playlists from newline-delimited Mopidy URIs
+playlist-from-list NAME INPUT="-" ARGS="":
+  ./scripts/playlist-from-list {{NAME}} --input {{INPUT}} {{ARGS}}

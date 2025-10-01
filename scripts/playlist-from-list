@@ -1,0 +1,176 @@
+#!/usr/bin/env python3
+"""Create a Mopidy playlist from a text file of track URIs."""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+from urllib import error, request
+
+DEFAULT_RPC_URL = "http://127.0.0.1:6680/mopidy/rpc"
+
+
+class MopidyClient:
+    def __init__(self, rpc_url: str) -> None:
+        self.rpc_url = rpc_url
+        self._next_id = 1
+
+    def call(self, method: str, params: dict | None = None) -> object:
+        payload = {
+            "jsonrpc": "2.0",
+            "id": self._next_id,
+            "method": method,
+        }
+        self._next_id += 1
+        if params is not None:
+            payload["params"] = params
+
+        data = json.dumps(payload).encode("utf-8")
+        req = request.Request(
+            self.rpc_url,
+            data=data,
+            headers={"Content-Type": "application/json"},
+        )
+        try:
+            with request.urlopen(req) as resp:
+                response = json.load(resp)
+        except error.HTTPError as exc:
+            message = exc.read().decode("utf-8", errors="replace")
+            raise RuntimeError(f"HTTP error {exc.code}: {message}") from exc
+        except error.URLError as exc:  # network or connection problem
+            raise RuntimeError(f"Failed to reach Mopidy at {self.rpc_url}: {exc.reason}") from exc
+
+        if "error" in response:
+            err = response["error"]
+            raise RuntimeError(f"Mopidy RPC error: {err.get('message')} ({err.get('code')})")
+
+        return response.get("result")
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Create or replace a Mopidy playlist from newline-delimited track URIs.",
+    )
+    parser.add_argument("name", help="Playlist name to create or replace.")
+    parser.add_argument(
+        "--input",
+        "-i",
+        default="-",
+        help="Source file with track URIs (default: stdin).",
+    )
+    parser.add_argument(
+        "--rpc-url",
+        default=DEFAULT_RPC_URL,
+        help=f"Mopidy JSON-RPC endpoint (default: {DEFAULT_RPC_URL}).",
+    )
+    parser.add_argument(
+        "--scheme",
+        default=None,
+        help="Optional uri_scheme hint for Mopidy (e.g. 'm3u', 'qobuz').",
+    )
+    parser.add_argument(
+        "--replace",
+        action="store_true",
+        help="Replace existing playlist with the same name if one exists.",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show actions without calling Mopidy.",
+    )
+    return parser.parse_args()
+
+
+def load_uris(source: str) -> list[str]:
+    if source == "-":
+        text = sys.stdin.read()
+    else:
+        text = Path(source).read_text()
+    lines = [line.strip() for line in text.splitlines()]
+    return [line for line in lines if line and not line.startswith("#")]
+
+
+def find_existing(client: MopidyClient, name: str) -> dict | None:
+    playlists = client.call("core.playlists.as_list") or []
+    for playlist in playlists:
+        if playlist.get("name") == name:
+            return playlist
+    return None
+
+
+def load_playlist(client: MopidyClient, uri: str) -> dict:
+    playlist = client.call("core.playlists.lookup", {"uri": uri})
+    if isinstance(playlist, dict):
+        return playlist
+    raise RuntimeError(f"Playlist lookup returned no result for {uri}")
+
+
+def ensure_playlist(
+    client: MopidyClient, *, name: str, scheme: str | None, replace: bool
+) -> dict:
+    existing = find_existing(client, name)
+    if existing and not replace:
+        raise RuntimeError(
+            f"Playlist '{name}' already exists. Use --replace to overwrite it."
+        )
+    if existing and replace:
+        playlist_uri = existing.get("uri")
+        if not playlist_uri:
+            raise RuntimeError("Existing playlist reported without URI; aborting.")
+        playlist = load_playlist(client, playlist_uri)
+        playlist["tracks"] = []
+        return playlist
+
+    params = {"name": name}
+    if scheme:
+        params["uri_scheme"] = scheme
+    created = client.call("core.playlists.create", params)
+    if not isinstance(created, dict):
+        raise RuntimeError("Mopidy returned unexpected response when creating playlist")
+    created.setdefault("tracks", [])
+    return created
+
+
+def to_track(uri: str) -> dict:
+    return {"__model__": "Track", "uri": uri}
+
+
+def save_playlist(client: MopidyClient, playlist: dict) -> dict:
+    playlist.setdefault("__model__", "Playlist")
+    return client.call("core.playlists.save", {"playlist": playlist})
+
+
+def main() -> None:
+    args = parse_args()
+    uris = load_uris(args.input)
+    if not uris:
+        print("No track URIs found in input.", file=sys.stderr)
+        sys.exit(1)
+
+    if args.dry_run:
+        print(f"Would send {len(uris)} tracks to playlist '{args.name}'.")
+        return
+
+    client = MopidyClient(args.rpc_url)
+    playlist = ensure_playlist(
+        client,
+        name=args.name,
+        scheme=args.scheme,
+        replace=args.replace,
+    )
+    playlist["tracks"] = [to_track(uri) for uri in uris]
+    saved = save_playlist(client, playlist)
+    uri = saved.get("uri") if isinstance(saved, dict) else None
+    print(
+        f"Playlist '{args.name}' updated with {len(uris)} tracks." +
+        (f" URI: {uri}" if uri else "")
+    )
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except RuntimeError as exc:
+        print(str(exc), file=sys.stderr)
+        sys.exit(2)
