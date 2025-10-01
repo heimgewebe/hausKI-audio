@@ -12,5 +12,10 @@
 - [ADR-Übersicht](docs/adr/README.md)
 - [Beitrag & Prozesse](docs/process/CONTRIBUTING.md)
 
+## Developer Comfort
+- Installiere `just` (z. B. `cargo install just`) und nutze `just lint` für lokale Docs-Checks.
+- `just audio-mode MODE=alsa ARGS="--restart"` um das Helper-Skript bequem auszuführen.
+- Kopiere `.env.example` nach `.env` und pflege Mopidy/Qobuz-URLs & Pfade lokal.
+
 ## Status
 MVP-Phase. Fokus: zuverlässiges Hi-Res-Streaming + Aufnahme + Skriptbarkeit.

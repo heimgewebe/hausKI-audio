@@ -13,3 +13,4 @@
 
 ## CI
 - Lint für Markdown/YAML darf grün sein; später Build-Checks ergänzen.
+- Lokal: `just lint` für markdownlint/yamllint (siehe `Justfile`).
