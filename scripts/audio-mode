@@ -5,11 +5,13 @@ from __future__ import annotations
 import argparse
 import subprocess
 import sys
+import re
 from pathlib import Path
 
 DEFAULT_CONFIG = Path.home() / ".config" / "mopidy" / "mopidy.conf"
 DEFAULT_PULSE = "pulsesink"
-DEFAULT_ALSA = "alsasink device=hw:MOTU_M2,0"
+DEFAULT_ALSA_FALLBACK = "alsasink device=hw:MOTU_M2,0"
+DEFAULT_CARD_HINT = "M2"
 
 
 def parse_args() -> argparse.Namespace:
@@ -18,8 +20,10 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "mode",
+        nargs="?",
         choices=["pulse", "alsa", "show"],
-        help="Target mode or show current configuration.",
+        default="alsa",
+        help="Target mode or show current configuration (default: alsa).",
     )
     parser.add_argument(
         "--config",
@@ -28,8 +32,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--alsa-output",
-        default=DEFAULT_ALSA,
-        help="ALSA output string to write when mode=alsa.",
+        default=None,
+        help="ALSA output string to write when mode=alsa (auto-detect MOTU when unset).",
     )
     parser.add_argument(
         "--pulse-output",
@@ -38,8 +42,39 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--restart",
+        dest="restart",
         action="store_true",
         help="Restart Mopidy via systemctl --user after writing audio mode.",
+    )
+    parser.add_argument(
+        "--no-restart",
+        dest="restart",
+        action="store_false",
+        help="Skip Mopidy restart (default: restart)",
+    )
+    parser.set_defaults(restart=True)
+    parser.add_argument(
+        "--control-pipewire",
+        dest="control_pipewire",
+        action="store_true",
+        help="Toggle PipeWire/Pulse services when switching modes (default: enabled).",
+    )
+    parser.add_argument(
+        "--no-control-pipewire",
+        dest="control_pipewire",
+        action="store_false",
+        help="Do not manage PipeWire services.",
+    )
+    parser.set_defaults(control_pipewire=True)
+    parser.add_argument(
+        "--card-hint",
+        default=DEFAULT_CARD_HINT,
+        help="Substring to detect MOTU card via aplay -l (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--aplay-bin",
+        default="aplay",
+        help="Path to aplay executable for card detection (default: %(default)s).",
     )
     return parser.parse_args()
 
@@ -122,6 +157,51 @@ def restart_mopidy() -> None:
         sys.exit(result.returncode)
 
 
+def manage_service(action: str, service: str) -> None:
+    subprocess.run(
+        ["systemctl", "--user", action, service],
+        check=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+
+def detect_motu_device(aplay_bin: str, card_hint: str) -> str | None:
+    try:
+        result = subprocess.run(
+            [aplay_bin, "-l"],
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+    except FileNotFoundError:
+        return None
+
+    if result.returncode != 0:
+        return None
+
+    pattern = re.compile(r"card\s+(\d+):.*" + re.escape(card_hint), re.IGNORECASE)
+    for line in result.stdout.splitlines():
+        match = pattern.search(line)
+        if match:
+            card_idx = match.group(1)
+            return f"hw:{card_idx},0"
+    return None
+
+
+def control_pipewire(mode: str, enabled: bool) -> None:
+    if not enabled:
+        return
+
+    if mode == "alsa":
+        manage_service("stop", "pipewire-pulse")
+        manage_service("stop", "pipewire")
+    elif mode == "pulse":
+        manage_service("start", "pipewire")
+        manage_service("start", "pipewire-pulse")
+
+
 def main() -> None:
     args = parse_args()
     config_path = Path(args.config).expanduser()
@@ -130,13 +210,33 @@ def main() -> None:
         show_mode(config_path)
         return
 
+    control_pipewire(args.mode, args.control_pipewire)
+
+    alsa_output = args.alsa_output
+    detected_device = None
+    if args.mode == "alsa" and alsa_output is None:
+        detected_device = detect_motu_device(args.aplay_bin, args.card_hint)
+        if detected_device is None:
+            alsa_output = DEFAULT_ALSA_FALLBACK
+        else:
+            alsa_output = f"alsasink device={detected_device}"
+
+    if args.mode == "pulse":
+        desired_output = args.pulse_output
+    else:
+        desired_output = alsa_output or DEFAULT_ALSA_FALLBACK
+
     previous = write_mode(
         config_path,
         args.mode,
         pulse_output=args.pulse_output,
-        alsa_output=args.alsa_output,
+        alsa_output=desired_output,
     )
-    print(f"Audio output changed from '{previous}' to '{args.mode}'.")
+
+    suffix = ""
+    if detected_device:
+        suffix = f" (card {detected_device})"
+    print(f"Audio output changed from '{previous}' to '{args.mode}'{suffix}.")
 
     if args.restart:
         restart_mopidy()

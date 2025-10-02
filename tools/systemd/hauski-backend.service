@@ -1,0 +1,16 @@
+[Unit]
+Description=Hauski Audio Backend (axum)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Passe das Repo/Wurzelverzeichnis an (WorkingDirectory sollte die Skripte finden).
+WorkingDirectory=%h/repos/hauski-audio
+EnvironmentFile=%h/.config/hauski-audio/backend.env
+ExecStart=%h/.local/bin/hauski-backend
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
