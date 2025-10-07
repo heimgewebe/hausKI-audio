@@ -7,10 +7,10 @@ use tracing::instrument;
 
 use crate::error::AppError;
 use crate::models::{
-    CommandResponse, HealthResponse, ModeGetResponse, ModeSetRequest, MopidyHealth, PlaylistRequest,
-    PlaylistResponse, SimilarQuery, SimilarResponse,
+    CommandResponse, HealthResponse, ModeGetResponse, ModeSetRequest, MopidyHealth,
+    PlaylistRequest, PlaylistResponse, SimilarQuery, SimilarResponse,
 };
-use crate::{discover, mopidy, scripts, AppState};
+use crate::{discover, scripts, AppState};
 
 pub fn app_routes(state: AppState) -> Router {
     Router::new()
@@ -27,7 +27,7 @@ pub fn app_routes(state: AppState) -> Router {
 pub async fn health(State(state): State<AppState>) -> Result<Json<HealthResponse>, AppError> {
     let mut overall = "ok";
     let mopidy_status = if state.config.check_mopidy_health {
-        match mopidy::health_check(&state.http_client, &state.config.mopidy_rpc_url).await {
+        match state.mopidy.health_check().await {
             Ok(_) => Some(MopidyHealth {
                 status: "ok",
                 detail: None,
@@ -56,7 +56,7 @@ pub async fn proxy_rpc(
     State(state): State<AppState>,
     Json(payload): Json<Value>,
 ) -> Result<Json<Value>, AppError> {
-    let response = mopidy::proxy(&state.http_client, &state.config.mopidy_rpc_url, payload).await?;
+    let response = state.mopidy.proxy(payload).await?;
     Ok(Json(response))
 }
 
@@ -101,13 +101,8 @@ pub async fn discover_similar(
     State(state): State<AppState>,
     Query(params): Query<SimilarQuery>,
 ) -> Result<Json<SimilarResponse>, AppError> {
-    let response = discover::similar_tracks(
-        &state.http_client,
-        &state.config.mopidy_rpc_url,
-        &params.seed,
-        params.limit,
-    )
-    .await?;
+    let response =
+        discover::similar_tracks(state.mopidy.as_ref(), &params.seed, params.limit).await?;
 
     Ok(Json(response))
 }

@@ -1,5 +1,6 @@
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
+use axum::Json;
 use serde_json::json;
 use thiserror::Error;
 
@@ -39,6 +40,6 @@ impl IntoResponse for AppError {
             "error": message,
         });
 
-        (status, payload).into_response()
+        (status, Json(payload)).into_response()
     }
 }

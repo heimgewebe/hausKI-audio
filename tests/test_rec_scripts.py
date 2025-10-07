@@ -58,6 +58,46 @@ def test_rec_start_detects_running_process(home):
             proc.kill()
 
 
+def test_rec_start_force_clears_running_process(home):
+    proc = subprocess.Popen(["sleep", "5"])  # noqa: S603, S607
+    try:
+        state_dir = home / ".cache" / "hauski-audio"
+        pid_file = state_dir / "recording.pid"
+        state_dir.mkdir(parents=True)
+        pid_file.write_text(f"{proc.pid}\n")
+
+        result = run_script(
+            "rec-start",
+            ["--dry-run", "--force", "--output", str(home / "recordings" / "forced.wav")],
+            home,
+        )
+
+        assert result.returncode == 0, result.stderr
+        assert "Would run:" in result.stdout
+        assert not pid_file.exists()
+    finally:
+        proc.terminate()
+        try:
+            proc.wait(timeout=1)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+
+
+def test_rec_start_rejects_existing_output(home):
+    target = home / "recordings" / "exists.wav"
+    target.parent.mkdir(parents=True)
+    target.write_bytes(b"test")
+
+    result = run_script(
+        "rec-start",
+        ["--dry-run", "--output", str(target)],
+        home,
+    )
+
+    assert result.returncode == 1
+    assert "Output file already exists" in result.stdout
+
+
 def test_rec_stop_dry_run_json(home):
     proc = subprocess.Popen(["sleep", "5"])  # noqa: S603, S607
     state_dir = home / ".cache" / "hauski-audio"

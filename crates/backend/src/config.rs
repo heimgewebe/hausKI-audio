@@ -107,8 +107,7 @@ fn resolve_mopidy_rpc_url() -> Result<Url, ConfigError> {
         .ok();
 
     if let Some(raw) = direct {
-        return Url::parse(&raw)
-            .map_err(|_| ConfigError::InvalidMopidyUrl(raw));
+        return Url::parse(&raw).map_err(|_| ConfigError::InvalidMopidyUrl(raw));
     }
 
     if let Ok(base) = env::var("MOPIDY_HTTP_URL") {

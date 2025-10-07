@@ -1,19 +1,22 @@
 use std::fs;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use axum::body::Body;
-use http::{Request, StatusCode};
+use async_trait::async_trait;
+use axum::{
+    body::Body,
+    http::{Request, StatusCode},
+};
 use http_body_util::BodyExt;
-use httpmock::MockServer;
-use serde_json::json;
+use serde_json::{json, Map, Value};
 use tempfile::TempDir;
 use tower::ServiceExt;
 use url::Url;
 
 use hauski_backend::config::{AppConfig, ScriptConfig};
-use hauski_backend::models::AudioMode;
+use hauski_backend::{AppError, AudioMode, MopidyClient};
 
 fn write_script(dir: &TempDir, name: &str, content: &str) -> std::path::PathBuf {
     let path = dir.path().join(name);
@@ -47,6 +50,67 @@ fn test_config_with(dir: &TempDir, mopidy_rpc_url: Url) -> AppConfig {
     }
 }
 
+struct FakeMopidy {
+    calls: Arc<Mutex<Vec<String>>>,
+    lookup: Value,
+    search: Value,
+    health_error: Option<String>,
+}
+
+impl FakeMopidy {
+    fn new(calls: Arc<Mutex<Vec<String>>>, lookup: Value, search: Value) -> Self {
+        Self {
+            calls,
+            lookup,
+            search,
+            health_error: None,
+        }
+    }
+
+    fn with_health_error(mut self, error: impl Into<String>) -> Self {
+        self.health_error = Some(error.into());
+        self
+    }
+}
+
+#[async_trait]
+impl MopidyClient for FakeMopidy {
+    async fn proxy(&self, payload: Value) -> Result<Value, AppError> {
+        let method = payload
+            .get("method")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .to_string();
+        self.calls.lock().unwrap().push(method.clone());
+
+        let id = payload.get("id").cloned().unwrap_or(Value::from(1));
+        let mut response = Map::new();
+        response.insert("jsonrpc".into(), Value::String("2.0".into()));
+        response.insert("id".into(), id);
+
+        match method.as_str() {
+            "core.library.lookup" => {
+                response.insert("result".into(), self.lookup.clone());
+            }
+            "core.library.search" => {
+                response.insert("result".into(), self.search.clone());
+            }
+            "core.playback.get_state" => {
+                if let Some(error) = &self.health_error {
+                    let mut error_obj = Map::new();
+                    error_obj.insert("message".into(), Value::String(error.clone()));
+                    response.insert("error".into(), Value::Object(error_obj));
+                } else {
+                    response.insert("result".into(), Value::String("stopped".into()));
+                }
+            }
+            other => return Err(AppError::internal(format!("unexpected method {other}"))),
+        }
+
+        Ok(Value::Object(response))
+    }
+}
+
 #[tokio::test]
 async fn health_endpoint_ok_without_mopidy() {
     let dir = TempDir::new().unwrap();
@@ -75,6 +139,46 @@ async fn health_endpoint_ok_without_mopidy() {
 }
 
 #[tokio::test]
+async fn health_endpoint_reports_mopidy_error() {
+    let dir = TempDir::new().unwrap();
+    let audio_script = "#!/usr/bin/env bash\nset -euo pipefail\nif [[ \"$1\" == \"show\" ]]; then\n  echo \"pulsesink\"\nelse\n  echo \"mode:$1\"\nfi\n";
+    write_script(&dir, "audio-mode", audio_script);
+    let playlist_script = "#!/usr/bin/env bash\nset -euo pipefail\necho \"playlist:$1\"\ncat -\n";
+    write_script(&dir, "playlist-from-list", playlist_script);
+
+    let calls = Arc::new(Mutex::new(Vec::new()));
+    let mopidy_stub: Arc<dyn MopidyClient> = Arc::new(
+        FakeMopidy::new(calls.clone(), json!([]), json!([])).with_health_error("pipewire down"),
+    );
+
+    let mut config = test_config(&dir);
+    config.check_mopidy_health = true;
+
+    let app = hauski_backend::build_router_with_mopidy(config, mopidy_stub);
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("GET")
+                .uri("/health")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let body: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    assert_eq!(body["status"], "degraded");
+    assert_eq!(body["mopidy"]["status"], "error");
+    assert_eq!(body["mopidy"]["detail"], "pipewire down");
+
+    let recorded = calls.lock().unwrap().clone();
+    assert_eq!(recorded, vec!["core.playback.get_state".to_string()]);
+}
+
+#[tokio::test]
 async fn mode_endpoints_invoke_script() {
     let dir = TempDir::new().unwrap();
     let audio_script = "#!/usr/bin/env bash\nset -euo pipefail\nif [[ \"$1\" == \"show\" ]]; then\n  echo \"pulsesink\"\nelse\n  echo \"mode:$1\"\nfi\n";
@@ -82,7 +186,7 @@ async fn mode_endpoints_invoke_script() {
     let playlist_script = "#!/usr/bin/env bash\nset -euo pipefail\necho \"playlist:$1\"\ncat -\n";
     write_script(&dir, "playlist-from-list", playlist_script);
 
-    let mut app = hauski_backend::build_router(test_config(&dir));
+    let app = hauski_backend::build_router(test_config(&dir));
 
     let get_response = app
         .clone()
@@ -115,7 +219,12 @@ async fn mode_endpoints_invoke_script() {
         .unwrap();
 
     assert_eq!(post_response.status(), StatusCode::OK);
-    let body = post_response.into_body().collect().await.unwrap().to_bytes();
+    let body = post_response
+        .into_body()
+        .collect()
+        .await
+        .unwrap()
+        .to_bytes();
     let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
     assert_eq!(json["stdout"], "mode:alsa");
 }
@@ -128,7 +237,7 @@ async fn playlist_endpoint_streams_uris() {
     let playlist_script = "#!/usr/bin/env bash\nset -euo pipefail\necho \"playlist:$1\"\ncat -\n";
     write_script(&dir, "playlist-from-list", playlist_script);
 
-    let mut app = hauski_backend::build_router(test_config(&dir));
+    let app = hauski_backend::build_router(test_config(&dir));
     let payload = serde_json::json!({
         "name": "Test",
         "uris": ["qobuz:track:1", "qobuz:track:2"],
@@ -161,64 +270,44 @@ async fn discover_similar_returns_tracks() {
     write_script(&dir, "audio-mode", audio_script);
     let playlist_script = "#!/usr/bin/env bash\nset -euo pipefail\necho \"playlist:$1\"\ncat -\n";
     write_script(&dir, "playlist-from-list", playlist_script);
+    let calls = Arc::new(Mutex::new(Vec::new()));
+    let mopidy_stub: Arc<dyn MopidyClient> = Arc::new(FakeMopidy::new(
+        calls.clone(),
+        json!([
+            {
+                "__model__": "Track",
+                "uri": "qobuz:track:seed",
+                "name": "Seed Track",
+                "artists": [
+                    {"name": "Seed Artist"}
+                ],
+                "album": {"name": "Seed Album"}
+            }
+        ]),
+        json!([
+            {
+                "tracks": [
+                    {
+                        "uri": "qobuz:track:1",
+                        "name": "Track One",
+                        "artists": [
+                            {"name": "Seed Artist"}
+                        ],
+                        "album": {"name": "Album One"}
+                    },
+                    {
+                        "uri": "qobuz:track:seed",
+                        "name": "Seed Track",
+                        "artists": [
+                            {"name": "Seed Artist"}
+                        ]
+                    }
+                ]
+            }
+        ]),
+    ));
 
-    let server = MockServer::start();
-    let mopidy_url = Url::parse(&format!("{}/mopidy/rpc", server.base_url())).unwrap();
-
-    let lookup_mock = server.mock(|when, then| {
-        when.method("POST")
-            .path("/mopidy/rpc")
-            .json_body_partial(json!({"method": "core.library.lookup"}));
-        then.status(200).json_body(json!({
-            "jsonrpc": "2.0",
-            "id": 1,
-            "result": [
-                {
-                    "__model__": "Track",
-                    "uri": "qobuz:track:seed",
-                    "name": "Seed Track",
-                    "artists": [
-                        {"name": "Seed Artist"}
-                    ],
-                    "album": {"name": "Seed Album"}
-                }
-            ],
-        }));
-    });
-
-    let search_mock = server.mock(|when, then| {
-        when.method("POST")
-            .path("/mopidy/rpc")
-            .json_body_partial(json!({"method": "core.library.search"}));
-        then.status(200).json_body(json!({
-            "jsonrpc": "2.0",
-            "id": 1,
-            "result": [
-                {
-                    "tracks": [
-                        {
-                            "uri": "qobuz:track:1",
-                            "name": "Track One",
-                            "artists": [
-                                {"name": "Seed Artist"}
-                            ],
-                            "album": {"name": "Album One"}
-                        },
-                        {
-                            "uri": "qobuz:track:seed",
-                            "name": "Seed Track",
-                            "artists": [
-                                {"name": "Seed Artist"}
-                            ]
-                        }
-                    ]
-                }
-            ],
-        }));
-    });
-
-    let config = test_config_with(&dir, mopidy_url);
-    let mut app = hauski_backend::build_router(config);
+    let app = hauski_backend::build_router_with_mopidy(test_config(&dir), mopidy_stub);
 
     let response = app
         .oneshot(
@@ -239,6 +328,12 @@ async fn discover_similar_returns_tracks() {
     assert_eq!(tracks.len(), 1);
     assert_eq!(tracks[0]["uri"], "qobuz:track:1");
 
-    lookup_mock.assert();
-    search_mock.assert();
+    let captured_calls = calls.lock().unwrap().clone();
+    assert_eq!(
+        captured_calls,
+        vec![
+            "core.library.lookup".to_string(),
+            "core.library.search".to_string(),
+        ]
+    );
 }

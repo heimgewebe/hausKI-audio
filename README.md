@@ -16,6 +16,7 @@
 
 ## Developer Comfort
 - Installiere `just` (z. B. `cargo install just`) und nutze `just lint` für Docs/YAML + Rust-Fmt/Clippy.
+- Optional: Installiere [`uv`](https://github.com/astral-sh/uv); `just test` legt damit automatisch eine isolierte `pytest`-Umgebung an.
 - `just test` führt die gesamte Test-Suite (Rust + Pytest) aus.
 - `just backend-run` startet die HTTP-Fassade (`cargo run --bin hauski-backend`).
 - `just audio-mode MODE=alsa ARGS="--restart"` um das Helper-Skript bequem auszuführen.

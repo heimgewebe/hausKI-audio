@@ -1,5 +1,5 @@
-use hauski_backend::config::AppConfig;
 use hauski_backend::build_router;
+use hauski_backend::config::AppConfig;
 use tokio::net::TcpListener;
 use tracing::{error, info};
 use tracing_subscriber::EnvFilter;

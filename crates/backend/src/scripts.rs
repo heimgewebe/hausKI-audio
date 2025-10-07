@@ -78,13 +78,7 @@ pub async fn playlist_from_list(
 
     let stdin_payload = request.uris.join("\n") + "\n";
 
-    run_script(
-        &config.playlist_script,
-        &args,
-        config,
-        Some(stdin_payload),
-    )
-    .await
+    run_script(&config.playlist_script, &args, config, Some(stdin_payload)).await
 }
 
 #[instrument(skip(config, args, input))]
@@ -113,20 +107,23 @@ async fn run_script(
 
     if let Some(payload) = input {
         if let Some(mut stdin) = child.stdin.take() {
-            stdin
-                .write_all(payload.as_bytes())
-                .await
-                .map_err(|err| AppError::internal(format!("failed to write to {program:?}: {err}")))?;
+            stdin.write_all(payload.as_bytes()).await.map_err(|err| {
+                AppError::internal(format!("failed to write to {program:?}: {err}"))
+            })?;
         }
     }
 
     let output = time::timeout(config.command_timeout, child.wait_with_output())
         .await
-        .map_err(|_| AppError::internal(format!(
-            "command {program:?} timed out after {:?}",
-            config.command_timeout
-        )))
-        .and_then(|result| result.map_err(|err| AppError::internal(format!("command error: {err}"))))?;
+        .map_err(|_| {
+            AppError::internal(format!(
+                "command {program:?} timed out after {:?}",
+                config.command_timeout
+            ))
+        })
+        .and_then(|result| {
+            result.map_err(|err| AppError::internal(format!("command error: {err}")))
+        })?;
 
     if !output.status.success() {
         return Err(AppError::internal(format!(
@@ -136,7 +133,11 @@ async fn run_script(
     }
 
     Ok(ScriptOutput {
-        stdout: String::from_utf8_lossy(&output.stdout).trim_end().to_string(),
-        stderr: String::from_utf8_lossy(&output.stderr).trim_end().to_string(),
+        stdout: String::from_utf8_lossy(&output.stdout)
+            .trim_end()
+            .to_string(),
+        stderr: String::from_utf8_lossy(&output.stderr)
+            .trim_end()
+            .to_string(),
     })
 }

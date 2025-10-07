@@ -1,10 +1,14 @@
 pub mod config;
+mod discover;
 mod error;
 mod handlers;
+mod models;
 mod mopidy;
 mod scripts;
-mod models;
-mod discover;
+
+pub use error::AppError;
+pub use models::AudioMode;
+pub use mopidy::{HttpMopidyClient, MopidyClient};
 
 use axum::Router;
 use std::sync::Arc;
@@ -15,14 +19,25 @@ use crate::handlers::app_routes;
 #[derive(Clone)]
 pub struct AppState {
     pub config: Arc<AppConfig>,
-    pub http_client: reqwest::Client,
+    pub mopidy: Arc<dyn MopidyClient>,
 }
 
 pub fn build_router(config: AppConfig) -> Router {
-    let state = AppState {
-        config: Arc::new(config),
-        http_client: reqwest::Client::new(),
-    };
+    let config = Arc::new(config);
+    let mopidy_client = Arc::new(HttpMopidyClient::new(
+        reqwest::Client::new(),
+        config.mopidy_rpc_url.clone(),
+    )) as Arc<dyn MopidyClient>;
 
-    app_routes(state)
+    app_routes(AppState {
+        config,
+        mopidy: mopidy_client,
+    })
+}
+
+pub fn build_router_with_mopidy(config: AppConfig, mopidy_client: Arc<dyn MopidyClient>) -> Router {
+    app_routes(AppState {
+        config: Arc::new(config),
+        mopidy: mopidy_client,
+    })
 }
