@@ -5,9 +5,8 @@ description = "HausKI Audio Layer – MOTU, Lake, Qobuz, Local Sound Stack"
 authors = [{ name = "Alexander Mohr", email = "alexdermohr@gmail.com" }]
 requires-python = ">=3.10"
 
-[tool.uv]
-sync = true
-dev-dependencies = ["pytest", "ruff", "black", "mypy"]
+[dependency-groups]
+dev = ["pytest", "ruff", "black", "mypy"]
 
 [build-system]
 requires = ["setuptools"]

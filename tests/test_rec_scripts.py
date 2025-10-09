@@ -1,6 +1,5 @@
 import json
 import os
-import signal
 import subprocess
 from pathlib import Path
 
