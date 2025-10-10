@@ -1,6 +1,5 @@
 import json
 import os
-import signal
 import subprocess
 from pathlib import Path
 
@@ -10,14 +9,18 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS_DIR = REPO_ROOT / "scripts"
 
 
-def run_script(script: str, args: list[str], home: Path, extra_env: dict[str, str] | None = None):
+def run_script(
+    script: str, args: list[str], home: Path, extra_env: dict[str, str] | None = None
+):
     env = os.environ.copy()
-    env.update({
-        "HOME": str(home),
-        "AUDIO_RECORD_DIR": str(home / "recordings"),
-        "AUDIO_RECORD_EXT": "wav",
-        "PW_RECORD_BINARY": "pw-record",
-    })
+    env.update(
+        {
+            "HOME": str(home),
+            "AUDIO_RECORD_DIR": str(home / "recordings"),
+            "AUDIO_RECORD_EXT": "wav",
+            "PW_RECORD_BINARY": "pw-record",
+        }
+    )
     if extra_env:
         env.update(extra_env)
     cmd = ["python3", str(SCRIPTS_DIR / script), *args]
@@ -33,7 +36,9 @@ def home(tmp_path):
 
 def test_rec_start_dry_run_json(home):
     target = home / "output.wav"
-    result = run_script("rec-start", ["--dry-run", "--json", "--output", str(target)], home)
+    result = run_script(
+        "rec-start", ["--dry-run", "--json", "--output", str(target)], home
+    )
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
     assert payload["output"] == str(target)
@@ -68,7 +73,12 @@ def test_rec_start_force_clears_running_process(home):
 
         result = run_script(
             "rec-start",
-            ["--dry-run", "--force", "--output", str(home / "recordings" / "forced.wav")],
+            [
+                "--dry-run",
+                "--force",
+                "--output",
+                str(home / "recordings" / "forced.wav"),
+            ],
             home,
         )
 
