@@ -6,7 +6,7 @@ authors = [{ name = "Alexander Mohr", email = "alexdermohr@gmail.com" }]
 requires-python = ">=3.10"
 
 [project.optional-dependencies]
-dev = ["pytest", "ruff", "black"]
+dev = ["pytest", "ruff", "black", "mypy"]
 
 [build-system]
 requires = ["setuptools"]
