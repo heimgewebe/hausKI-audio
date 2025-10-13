@@ -11,6 +11,7 @@
   - Kann Resampling/Processing enthalten.
 
 ## Umschalten
+
 ```bash
 ./scripts/audio-mode alsa   # Bit-perfect, exklusiv
 ./scripts/audio-mode pulse  # Komfort, Mixing
