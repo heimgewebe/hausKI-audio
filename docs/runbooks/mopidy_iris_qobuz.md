@@ -2,7 +2,7 @@
 
 ## Dienste
 
-- Mopidy HTTP: http://127.0.0.1:6680/ (Iris unter /iris)
+- Mopidy HTTP: <http://127.0.0.1:6680/> (Iris unter /iris)
 - Mopidy MPD: 127.0.0.1:6600
 
 ## Konfig-Pfade
@@ -14,7 +14,8 @@
 ## Qualitätsstufe
 
 - `quality = 7` = Hi-Res bis 24/192
-- (Optional) `27` versucht >96 kHz, bringt aber in der Praxis selten Mehrwert.
+- (Optional) `27` versucht >96 kHz, bringt aber in der Praxis selten
+  Mehrwert.
 
 ## Modus wechseln
 
@@ -42,8 +43,8 @@
   Stream).
 - Zusätzliche `pw-record` Flags: `--extra --latency=128` o.ä. werden direkt
   durchgereicht.
-- Speicherort/Endung via `.env` (Variablen `AUDIO_RECORD_DIR`,
-  `AUDIO_RECORD_EXT`), Binary mit `PW_RECORD_BINARY`.
+- Speicherort/Endung via `.env` (`AUDIO_RECORD_DIR`, `AUDIO_RECORD_EXT`),
+  Binary mit `PW_RECORD_BINARY`.
 
 ## Troubleshooting
 
@@ -51,8 +52,7 @@
   `just rec-start ARGS="--force"` räumt stale State.
 - **Falsches Backend:** `just audio-mode MODE=pulse` für Alltag, danach Mopidy
   neu starten.
-- **Keine Aufnahme hörbar:** `pw-top` prüfen, ob `pw-record` Streams empfängt;
-  PipeWire-Source wählen (`pw-cli port set` oder `pavucontrol`).
+- **Keine Aufnahme hörbar:** `pw-top` prüfen, ob `pw-record` Streams
+  empfängt; PipeWire-Source wählen (`pw-cli port set` oder `pavucontrol`).
 - **Qobuz Login schlägt fehl:** Secrets in `~/.config/mopidy/secret.conf`
   prüfen, Mopidy-Logs (`journalctl --user -u mopidy`).
-

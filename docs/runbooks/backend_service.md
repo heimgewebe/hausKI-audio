@@ -54,6 +54,7 @@ curl http://127.0.0.1:8080/mode # sollte pulsesink anzeigen
 
 ## Fehlerbehebung
 
-- `500 + command ... timed out`: Timeout in `HAUSKI_COMMAND_TIMEOUT_MS` erhöhen oder Skript prüfen.
+- `500 + command ... timed out`: Timeout in `HAUSKI_COMMAND_TIMEOUT_MS`
+  erhöhen oder Skript prüfen.
 - `502 + Mopidy returned`: Mopidy-HTTP-URL/Authentifizierung checken.
 - Systemd: `systemctl --user status hauski-backend.service` bzw. Journal prüfen.
