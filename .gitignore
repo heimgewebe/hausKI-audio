@@ -7,7 +7,7 @@
 *.log
 .DS_Store
 
-# Python
+# Python caches
 __pycache__/
 *.egg-info/
 .pytest_cache/
