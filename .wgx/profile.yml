@@ -1,4 +1,4 @@
-profile: hauski-audio
+profile: default
 description: "Local audio orchestration layer for HausKI"
 lang: python
 wgx-version: ">=0.3"
