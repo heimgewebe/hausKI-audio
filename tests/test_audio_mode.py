@@ -10,9 +10,11 @@ SCRIPTS_DIR = REPO_ROOT / "scripts"
 
 def run_audio_mode(args: list[str], home: Path):
     env = os.environ.copy()
-    env.update({
-        "HOME": str(home),
-    })
+    env.update(
+        {
+            "HOME": str(home),
+        }
+    )
     cmd = ["python3", str(SCRIPTS_DIR / "audio-mode"), *args]
     return subprocess.run(cmd, capture_output=True, text=True, env=env, cwd=REPO_ROOT)
 
