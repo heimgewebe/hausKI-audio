@@ -13,3 +13,6 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [tool.uv]
+# Minimal-Konfig – reicht, um CI-Assertion zu erfüllen
+index-url = "https://pypi.org/simple"
+python-preference = "system"
