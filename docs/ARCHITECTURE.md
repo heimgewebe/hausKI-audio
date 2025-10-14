@@ -1,7 +1,8 @@
 # Architektur (Entwurf)
 
 - **Player-Backend:** Mopidy (Iris-Frontend), Qobuz-Plugin (Hi-Res).
-- **Control-Plane:** kleine HTTP-API (axum) als Fassade für Mopidy JSON-RPC und lokale Skripte.
+- **Control-Plane:** kleine HTTP-API (axum) als Fassade für Mopidy
+  JSON-RPC und lokale Skripte.
   - `/health` prüft Backend + optional Mopidy-RPC.
   - `/rpc` proxyt JSON-RPC Calls zu Mopidy.
   - `/mode` zeigt/ändert den Audio-Modus via `scripts/audio-mode`.
