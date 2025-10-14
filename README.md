@@ -18,24 +18,23 @@
 
 ## Developer Comfort
 
-- Installiere `just` (z. B. `cargo install just`) und nutze `just lint` für
-  Docs/YAML + Rust-Fmt/Clippy.
-- Optional: Installiere [`uv`](https://github.com/astral-sh/uv); `just test`
-  legt damit automatisch eine isolierte `pytest`-Umgebung an.
-- `just test` führt die gesamte Test-Suite (Rust + Pytest) aus.
-- `just backend-run` startet die HTTP-Fassade (`cargo run --bin
-  hauski-backend`).
-- `just audio-mode MODE=alsa ARGS="--restart"` um das Helper-Skript bequem
-  auszuführen.
-- `just playlist-from-list NAME="HiRes Night" INPUT=tracks.txt
-  ARGS="--replace"` baut Playlists aus URI-Listen.
-- `just rec-start ARGS="--rate 192000 --channels 2"` startet die Aufnahme
-  (`rec-stop` beendet sie).
-- `just rec-smoke` prüft die Aufnahme-Skripte im Dry-Run (kein Audio nötig).
-- Kopiere `.env.example` nach `.env` und pflege Mopidy/Qobuz-URLs & Pfade
-  lokal.
-  - Standard-Modus ist jetzt ALSA (bit-perfect); `./scripts/audio-mode pulse`
-    schaltet auf Pulse.
+Starte mit `just setup`, um die Python-Umgebung einzurichten.
+
+- **`just test`**: Führt die gesamte Test-Suite (Rust + Pytest) aus.
+- **`just lint`**: Prüft den Code-Stil (Rust + Python).
+- **`just backend-run`**: Startet die HTTP-Fassade.
+- **`just audio-mode MODE=alsa ARGS="--restart"`**: Führt das Helper-Skript
+  aus.
+- … und viele weitere (`playlist-from-list`, `rec-start`, …).
+
+### Fremdumgebung/Sandbox
+
+Wenn `just` oder `uv` fehlen, laufen die Skripte im **Relax-Modus**:
+
+- Das Setup-Skript (`scripts/bootstrap.sh`) greift automatisch auf `pip`
+  zurück, falls `uv` nicht gefunden wird.
+- Die CI bleibt strikt; eine fehlende `.wgx/profile.yml` führt dort zu
+  einem Fehler, lokal nur zu einer Warnung.
 
 ## Status
 
