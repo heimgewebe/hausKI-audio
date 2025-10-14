@@ -1,11 +1,10 @@
-profile: default
-description: "Local audio orchestration layer for HausKI"
-lang: python
-wgx-version: ">=0.3"
-meta:
-  repo: alexdermohr/hauski-audio
-  maintainer: alexdermohr@gmail.com
-  tags: [audio, motu, qobuz, hauski, wgx]
-env:
-  PYTHONUNBUFFERED: "1"
-  UV_PIP_VERSION: "24.0"
+# hauski-audio – WGX Profil
+environment: development
+features:
+  - core
+# Optionale Felder für spätere Fleet-Runs:
+# repo:
+#   role: app
+#   tags: [audio, mopidy, backend]
+# ci:
+#   smoke: true
