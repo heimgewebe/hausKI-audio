@@ -43,3 +43,31 @@ MVP-Phase. Fokus: zuverlässiges Hi-Res-Streaming + Aufnahme + Skriptbarkeit.
 
 - HTTP-Backend (`axum`) stellt `/health`, `/rpc`, `/mode`,
   `/playlists/from-list`, `/discover/similar` bereit.
+
+### Audio Event Telemetry
+
+Das Projekt kann minimale Telemetrie-Events für Audio-Sessions auslösen.
+Diese werden in `export/audio.events.jsonl` gespeichert.
+
+**Beispiele:**
+
+```bash
+# Eine neue Audio-Session starten
+./scripts/emit-audio-event.sh audio.session_started
+
+# Eine Session beenden
+./scripts/emit-audio-event.sh audio.session_ended "session-abc" 5000
+
+# Latenz-Informationen loggen
+./scripts/emit-audio-event.sh audio.latency_ms 12
+```
+
+**Validierung:**
+
+Die erzeugten Events können gegen das JSON-Schema validiert werden:
+
+```bash
+npx -y ajv-cli@5 validate \
+  -s contracts/audio.events.schema.json \
+  -d export/audio.events.jsonl
+```

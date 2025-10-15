@@ -12,6 +12,11 @@ dev = ["pytest", "ruff", "black", "mypy"]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["tests*"]
+exclude = ["crates", "export", "contracts", "target"]
+
 [tool.uv]
 # Minimal-Konfig – reicht, um CI-Assertion zu erfüllen
 index-url = "https://pypi.org/simple"

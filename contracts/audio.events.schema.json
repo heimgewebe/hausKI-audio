@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Hauski Audio Events",
+  "description": "Schema for audio telemetry events.",
+  "type": "object",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "ts": { "type": "integer" },
+        "kind": { "type": "string", "const": "audio.session_started" },
+        "session_id": { "type": "string" },
+        "bpm": { "type": "integer" },
+        "routing": { "type": "string" }
+      },
+      "required": ["ts", "kind", "session_id", "bpm", "routing"]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "ts": { "type": "integer" },
+        "kind": { "type": "string", "const": "audio.session_ended" },
+        "session_id": { "type": "string" },
+        "duration_ms": { "type": "integer" }
+      },
+      "required": ["ts", "kind", "session_id", "duration_ms"]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "ts": { "type": "integer" },
+        "kind": { "type": "string", "const": "audio.latency_ms" },
+        "latency_ms": { "type": "integer" }
+      },
+      "required": ["ts", "kind", "latency_ms"]
+    }
+  ]
+}
