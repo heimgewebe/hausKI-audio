@@ -1,4 +1,6 @@
 name: WGX Guard
+permissions:
+  contents: read
 
 on:
   push:
