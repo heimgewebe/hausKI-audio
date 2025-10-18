@@ -1,4 +1,6 @@
 name: rust-ci
+permissions:
+  contents: read
 
 on:
   push:
