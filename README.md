@@ -15,6 +15,8 @@
 - [Audio-Modi (ALSA/Pulse)](docs/README_ALSA.md)
 - [ADR-Übersicht](docs/adr/README.md)
 - [Beitrag & Prozesse](docs/process/CONTRIBUTING.md)
+- [Troubleshooting](docs/troubleshooting.md)
+- [IO-Contracts](docs/io-contracts.md)
 
 ## Developer Comfort
 
