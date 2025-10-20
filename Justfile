@@ -67,6 +67,24 @@ test:
 backend-run:
     cargo run --bin hauski-backend -- "$@"
 
+audio-mode MODE="show" *ARGS:
+    ./scripts/audio-mode "{{MODE}}" {{ARGS}}
+
+playlist-from-list NAME INPUT *ARGS:
+    ./scripts/playlist-from-list "{{NAME}}" --input "{{INPUT}}" {{ARGS}}
+
+rec-start *ARGS:
+    ./scripts/rec-start {{ARGS}}
+
+rec-stop *ARGS:
+    ./scripts/rec-stop {{ARGS}}
+
+rec-smoke:
+    @echo " smoketest: rec-start"
+    ./scripts/rec-start --dry-run --json
+    @echo " smoketest: rec-stop"
+    ./scripts/rec-stop --dry-run --json
+
 doctor:
     @echo "🔎 Environment check"
     which uv || echo "❌ uv not found"
