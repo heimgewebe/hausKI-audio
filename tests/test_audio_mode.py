@@ -13,13 +13,20 @@ def run_audio_mode(args: list[str], home: Path):
     env.update(
         {
             "HOME": str(home),
-        }
+        },
     )
     cmd = ["python3", str(SCRIPTS_DIR / "audio-mode"), *args]
-    return subprocess.run(cmd, capture_output=True, text=True, env=env, cwd=REPO_ROOT)
+    return subprocess.run(
+        cmd,
+        check=False,
+        capture_output=True,
+        text=True,
+        env=env,
+        cwd=REPO_ROOT,
+    )
 
 
-@pytest.fixture()
+@pytest.fixture
 def home(tmp_path):
     home_dir = tmp_path / "home"
     home_dir.mkdir()
