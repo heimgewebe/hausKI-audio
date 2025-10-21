@@ -23,6 +23,8 @@ python-preference = "system"
 
 [tool.ruff]
 line-length = 79
+
+[tool.ruff.lint]
 select = ["ALL"]
 ignore = [
     "D100", # Missing docstring in public module
@@ -33,6 +35,9 @@ ignore = [
     "D415", # First line of docstring should be in imperative mood
     "E501", # Line too long (handled by black)
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]
 
 [tool.black]
 line-length = 79
