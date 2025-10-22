@@ -1,0 +1,26 @@
+name: validate audio events
+
+on:
+  push:
+    paths:
+      - "export/**"
+      - "fixtures/**"
+      - ".github/workflows/validate-audio-events.yml"
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate-jsonl:
+    name: "audio.events.jsonl schema check"
+    uses: heimgewebe/metarepo/.github/workflows/reusable-validate-jsonl.yml@contracts-v1
+    strategy:
+      fail-fast: false
+      matrix:
+        file:
+          - export/audio.events.jsonl
+          - fixtures/audio/events.jsonl
+    with:
+      jsonl_path: ${{ matrix.file }}
+      schema_url: https://raw.githubusercontent.com/heimgewebe/metarepo/contracts-v1/contracts/audio.events.schema.json
+      strict: false
+      validate_formats: true
