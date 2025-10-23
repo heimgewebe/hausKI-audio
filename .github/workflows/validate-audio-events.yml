@@ -1,4 +1,6 @@
 name: validate audio events
+permissions:
+  contents: read
 
 on:
   push:
