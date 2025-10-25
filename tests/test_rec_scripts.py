@@ -28,7 +28,7 @@ def run_script(
     if extra_env:
         env.update(extra_env)
     cmd = ["python3", str(SCRIPTS_DIR / script), *args]
-    return subprocess.run(  # noqa: S603
+    return subprocess.run(
         cmd,
         check=False,
         capture_output=True,
