@@ -6,6 +6,8 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum AppError {
+    #[error("startup failed: {0}")]
+    Startup(String),
     #[error("{0}")]
     Validation(String),
     #[error("{0}")]
@@ -34,6 +36,7 @@ impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let (status, message) = match &self {
             AppError::Validation(message) => (StatusCode::BAD_REQUEST, message.as_str()),
+            AppError::Startup(message) => (StatusCode::INTERNAL_SERVER_ERROR, message.as_str()),
             AppError::BadRequest(message) => (StatusCode::BAD_REQUEST, message.as_str()),
             AppError::Upstream(message) => (StatusCode::BAD_GATEWAY, message.as_str()),
             AppError::Internal(message) => (StatusCode::INTERNAL_SERVER_ERROR, message.as_str()),
