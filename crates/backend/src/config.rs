@@ -121,7 +121,6 @@ impl AppConfig {
     }
 
     pub fn validate(&self) -> Result<(), crate::error::AppError> {
-        use std::os::unix::fs::PermissionsExt;
         let scripts = [
             &self.audio_mode_script,
             &self.playlist_script,
@@ -137,12 +136,29 @@ impl AppConfig {
                     p.display()
                 )));
             }
-            let meta = std::fs::metadata(&p)?;
-            if meta.permissions().mode() & 0o111 == 0 {
-                return Err(crate::error::AppError::Validation(format!(
-                    "script not executable: {}",
-                    p.display()
-                )));
+            // Unix: echte Ausführbarkeitsprüfung über Exec-Bits
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                let meta = std::fs::metadata(&p)?;
+                if meta.permissions().mode() & 0o111 == 0 {
+                    return Err(crate::error::AppError::Validation(format!(
+                        "script not executable: {}",
+                        p.display()
+                    )));
+                }
+            }
+            // Non-Unix (z. B. Windows): kein Exec-Bit – minimal prüfen, dass es eine reguläre Datei ist.
+            // Ob sie "ausführbar" ist, entscheidet später der Aufruf (z. B. .cmd/.bat/.ps1/.exe).
+            #[cfg(not(unix))]
+            {
+                let meta = std::fs::metadata(&p)?;
+                if !meta.is_file() {
+                    return Err(crate::error::AppError::Validation(format!(
+                        "script is not a regular file: {}",
+                        p.display()
+                    )));
+                }
             }
         }
         Ok(())
