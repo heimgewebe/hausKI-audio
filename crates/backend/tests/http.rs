@@ -44,6 +44,12 @@ fn test_config_with(dir: &TempDir, mopidy_rpc_url: Url) -> AppConfig {
         playlist_script: ScriptConfig {
             program: dir.path().join("playlist-from-list"),
         },
+        rec_start_script: ScriptConfig {
+            program: dir.path().join("rec-start"),
+        },
+        rec_stop_script: ScriptConfig {
+            program: dir.path().join("rec-stop"),
+        },
         script_workdir: dir.path().to_path_buf(),
         command_timeout: Duration::from_secs(2),
         check_mopidy_health: false,
@@ -118,6 +124,8 @@ async fn health_endpoint_ok_without_mopidy() {
     write_script(&dir, "audio-mode", audio_script);
     let playlist_script = "#!/usr/bin/env bash\nset -euo pipefail\necho \"playlist:$1\"\ncat -\n";
     write_script(&dir, "playlist-from-list", playlist_script);
+    write_script(&dir, "rec-start", "");
+    write_script(&dir, "rec-stop", "");
 
     let app = hauski_backend::build_router(test_config(&dir));
 
@@ -145,6 +153,8 @@ async fn health_endpoint_reports_mopidy_error() {
     write_script(&dir, "audio-mode", audio_script);
     let playlist_script = "#!/usr/bin/env bash\nset -euo pipefail\necho \"playlist:$1\"\ncat -\n";
     write_script(&dir, "playlist-from-list", playlist_script);
+    write_script(&dir, "rec-start", "");
+    write_script(&dir, "rec-stop", "");
 
     let calls = Arc::new(Mutex::new(Vec::new()));
     let mopidy_stub: Arc<dyn MopidyClient> = Arc::new(
@@ -185,6 +195,8 @@ async fn mode_endpoints_invoke_script() {
     write_script(&dir, "audio-mode", audio_script);
     let playlist_script = "#!/usr/bin/env bash\nset -euo pipefail\necho \"playlist:$1\"\ncat -\n";
     write_script(&dir, "playlist-from-list", playlist_script);
+    write_script(&dir, "rec-start", "");
+    write_script(&dir, "rec-stop", "");
 
     let app = hauski_backend::build_router(test_config(&dir));
 
@@ -236,6 +248,8 @@ async fn playlist_endpoint_streams_uris() {
     write_script(&dir, "audio-mode", audio_script);
     let playlist_script = "#!/usr/bin/env bash\nset -euo pipefail\necho \"playlist:$1\"\ncat -\n";
     write_script(&dir, "playlist-from-list", playlist_script);
+    write_script(&dir, "rec-start", "");
+    write_script(&dir, "rec-stop", "");
 
     let app = hauski_backend::build_router(test_config(&dir));
     let payload = serde_json::json!({
@@ -270,6 +284,8 @@ async fn discover_similar_returns_tracks() {
     write_script(&dir, "audio-mode", audio_script);
     let playlist_script = "#!/usr/bin/env bash\nset -euo pipefail\necho \"playlist:$1\"\ncat -\n";
     write_script(&dir, "playlist-from-list", playlist_script);
+    write_script(&dir, "rec-start", "");
+    write_script(&dir, "rec-stop", "");
     let calls = Arc::new(Mutex::new(Vec::new()));
     let mopidy_stub: Arc<dyn MopidyClient> = Arc::new(FakeMopidy::new(
         calls.clone(),

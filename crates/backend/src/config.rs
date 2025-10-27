@@ -12,6 +12,8 @@ pub struct AppConfig {
     pub mopidy_rpc_url: Url,
     pub audio_mode_script: ScriptConfig,
     pub playlist_script: ScriptConfig,
+    pub rec_start_script: ScriptConfig,
+    pub rec_stop_script: ScriptConfig,
     pub script_workdir: PathBuf,
     pub command_timeout: Duration,
     pub check_mopidy_health: bool,
@@ -47,6 +49,8 @@ impl AppConfig {
     const DEFAULT_MOPIDY_RPC: &'static str = "http://127.0.0.1:6680/mopidy/rpc";
     const DEFAULT_AUDIO_MODE_CMD: &'static str = "./scripts/audio-mode";
     const DEFAULT_PLAYLIST_CMD: &'static str = "./scripts/playlist-from-list";
+    const DEFAULT_REC_START_CMD: &'static str = "./scripts/rec-start";
+    const DEFAULT_REC_STOP_CMD: &'static str = "./scripts/rec-stop";
     const DEFAULT_TIMEOUT_SECS: u64 = 10;
 
     pub fn from_env() -> Result<Self, ConfigError> {
@@ -79,6 +83,20 @@ impl AppConfig {
             ),
         };
 
+        let rec_start_script = ScriptConfig {
+            program: PathBuf::from(
+                env::var("HAUSKI_REC_START_CMD")
+                    .unwrap_or_else(|_| Self::DEFAULT_REC_START_CMD.to_string()),
+            ),
+        };
+
+        let rec_stop_script = ScriptConfig {
+            program: PathBuf::from(
+                env::var("HAUSKI_REC_STOP_CMD")
+                    .unwrap_or_else(|_| Self::DEFAULT_REC_STOP_CMD.to_string()),
+            ),
+        };
+
         let timeout_ms: u64 = env::var("HAUSKI_COMMAND_TIMEOUT_MS")
             .ok()
             .and_then(|raw| raw.parse().ok())
@@ -94,10 +112,40 @@ impl AppConfig {
             mopidy_rpc_url,
             audio_mode_script,
             playlist_script,
+            rec_start_script,
+            rec_stop_script,
             script_workdir: workdir,
             command_timeout: Duration::from_millis(timeout_ms),
             check_mopidy_health,
         })
+    }
+
+    pub fn validate(&self) -> Result<(), crate::error::AppError> {
+        use std::os::unix::fs::PermissionsExt;
+        let scripts = [
+            &self.audio_mode_script,
+            &self.playlist_script,
+            &self.rec_start_script,
+            &self.rec_stop_script,
+        ];
+
+        for script_config in scripts {
+            let p = script_config.resolve_with(&self.script_workdir);
+            if !p.exists() {
+                return Err(crate::error::AppError::Validation(format!(
+                    "script not found: {}",
+                    p.display()
+                )));
+            }
+            let meta = std::fs::metadata(&p)?;
+            if meta.permissions().mode() & 0o111 == 0 {
+                return Err(crate::error::AppError::Validation(format!(
+                    "script not executable: {}",
+                    p.display()
+                )));
+            }
+        }
+        Ok(())
     }
 }
 

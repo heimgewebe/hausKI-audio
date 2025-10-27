@@ -24,6 +24,11 @@ async fn main() {
         }
     };
 
+    if let Err(err) = config.validate() {
+        error!("configuration is invalid: {err}");
+        std::process::exit(1);
+    }
+
     let bind_addr = config.bind_addr;
     let listener = match TcpListener::bind(bind_addr).await {
         Ok(listener) => listener,
