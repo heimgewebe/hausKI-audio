@@ -1,11 +1,19 @@
 use hauski_backend::build_router;
 use hauski_backend::config::AppConfig;
+use hauski_backend::error::AppError;
 use tokio::net::TcpListener;
 use tracing::{error, info};
 use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
 async fn main() {
+    if let Err(err) = run().await {
+        error!("{err}");
+        std::process::exit(1);
+    }
+}
+
+async fn run() -> Result<(), AppError> {
     dotenvy::dotenv().ok();
 
     let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
@@ -16,26 +24,19 @@ async fn main() {
         .compact()
         .init();
 
-    let config = match AppConfig::from_env() {
-        Ok(cfg) => cfg,
-        Err(err) => {
-            error!("failed to load configuration: {err}");
-            std::process::exit(1);
-        }
-    };
+    let config = AppConfig::from_env()
+        .map_err(|err| AppError::Startup(format!("failed to load configuration: {err}")))?;
 
     let bind_addr = config.bind_addr;
-    let listener = match TcpListener::bind(bind_addr).await {
-        Ok(listener) => listener,
-        Err(err) => {
-            error!("failed to bind to {bind_addr}: {err}");
-            std::process::exit(1);
-        }
-    };
+    let listener = TcpListener::bind(bind_addr)
+        .await
+        .map_err(|err| AppError::Startup(format!("failed to bind to {bind_addr}: {err}")))?;
 
     info!("listening on {bind_addr}");
 
-    if let Err(err) = axum::serve(listener, build_router(config)).await {
-        error!("server error: {err}");
-    }
+    axum::serve(listener, build_router(config))
+        .await
+        .map_err(|err| AppError::Startup(format!("server error: {err}")))?;
+
+    Ok(())
 }
