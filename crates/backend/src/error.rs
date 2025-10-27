@@ -17,6 +17,8 @@ pub enum AppError {
     CommandStatus(String),
     #[error("configuration validation failed: {0}")]
     Validation(String),
+    #[error("startup failed: {0}")]
+    Startup(String),
     #[error("{0}")]
     BadRequest(String),
     #[error("{0}")]
@@ -45,6 +47,11 @@ impl IntoResponse for AppError {
             AppError::BadRequest(_) => StatusCode::BAD_REQUEST,
             AppError::Mopidy(_) | AppError::Upstream(_) => StatusCode::BAD_GATEWAY,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
+        let (status, message) = match &self {
+            AppError::Startup(message) => (StatusCode::INTERNAL_SERVER_ERROR, message.as_str()),
+            AppError::BadRequest(message) => (StatusCode::BAD_REQUEST, message.as_str()),
+            AppError::Upstream(message) => (StatusCode::BAD_GATEWAY, message.as_str()),
+            AppError::Internal(message) => (StatusCode::INTERNAL_SERVER_ERROR, message.as_str()),
         };
 
         let payload = json!({
