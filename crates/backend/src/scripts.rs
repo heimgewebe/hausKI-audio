@@ -8,6 +8,7 @@ use tracing::instrument;
 use crate::config::{AppConfig, ScriptConfig};
 use crate::error::AppError;
 use crate::models::{ModeSetRequest, PlaylistRequest};
+use crate::validation::validate_uris;
 
 #[derive(Debug)]
 pub struct ScriptOutput {
@@ -60,6 +61,8 @@ pub async fn playlist_from_list(
     if request.uris.is_empty() {
         return Err(AppError::bad_request("uris must not be empty"));
     }
+
+    validate_uris(&request.uris).map_err(|e| AppError::Validation(e.to_string()))?;
 
     let mut args = vec![request.name.clone(), "--input".to_string(), "-".to_string()];
 
