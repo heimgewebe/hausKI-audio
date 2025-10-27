@@ -27,6 +27,11 @@ async fn run() -> Result<(), AppError> {
     let config = AppConfig::from_env()
         .map_err(|err| AppError::Startup(format!("failed to load configuration: {err}")))?;
 
+    if let Err(err) = config.validate() {
+        error!("configuration is invalid: {err}");
+        std::process::exit(1);
+    }
+
     let bind_addr = config.bind_addr;
     let listener = TcpListener::bind(bind_addr)
         .await
