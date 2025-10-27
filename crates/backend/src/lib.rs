@@ -1,6 +1,6 @@
 pub mod config;
 mod discover;
-mod error;
+pub mod error;
 mod handlers;
 mod models;
 mod mopidy;
