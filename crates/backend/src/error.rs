@@ -13,6 +13,8 @@ pub enum AppError {
     Mopidy(#[from] reqwest::Error),
     #[error("failed to execute command: {0}")]
     Command(#[from] std::io::Error),
+    #[error("an unexpected error occurred: {0}")]
+    Anyhow(#[from] anyhow::Error),
     #[error("command returned non-zero exit code: {0}")]
     CommandStatus(String),
     #[error("configuration validation failed: {0}")]

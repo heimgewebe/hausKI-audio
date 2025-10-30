@@ -1,29 +1,29 @@
 use regex::Regex;
-use thiserror::Error;
 
-#[derive(Debug, Error)]
-pub enum ValidationError {
-    #[error("unsupported URI scheme: {0}")]
-    UnsupportedScheme(String),
-    #[error("invalid URI: {0}")]
-    Invalid(String),
+lazy_static::lazy_static! {
+    /// Erlaubte URI-Schemata: qobuz:, spotify:, local:
+    /// Mindestens ein weiteres Zeichen hinter dem Schema verlangt.
+    static ref URI_RE: Regex = Regex::new(r"^(?i:(qobuz|spotify|local))[:/].+").unwrap();
 }
 
-pub fn validate_uri(uri: &str) -> Result<(), ValidationError> {
-    // erlaubte Schemata: qobuz:, spotify:, local:
-    let re = Regex::new(r"^(qobuz|spotify|local):.+$").unwrap();
-    if !re.is_match(uri) {
-        if let Some((scheme, _)) = uri.split_once(':') {
-            return Err(ValidationError::UnsupportedScheme(scheme.into()));
-        }
-        return Err(ValidationError::Invalid(uri.into()));
-    }
-    Ok(())
+pub fn is_allowed_uri(uri: &str) -> bool {
+    URI_RE.is_match(uri)
 }
 
-pub fn validate_uris(uris: &[String]) -> Result<(), ValidationError> {
-    for u in uris {
-        validate_uri(u)?;
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn ok_schemes() {
+        assert!(is_allowed_uri("qobuz:track:123"));
+        assert!(is_allowed_uri("spotify:track:123"));
+        assert!(is_allowed_uri("local:/music/foo.flac"));
+        assert!(is_allowed_uri("LOCAL:/x"));
     }
-    Ok(())
+    #[test]
+    fn rejects_empty_and_plain() {
+        assert!(!is_allowed_uri(""));
+        assert!(!is_allowed_uri("file:///tmp/x")); // nicht freigeschaltet
+        assert!(!is_allowed_uri("qobuz:"));       // nichts dahinter
+    }
 }

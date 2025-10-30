@@ -4,7 +4,7 @@ pub mod error;
 mod handlers;
 mod models;
 mod mopidy;
-mod scripts;
+pub mod scripts;
 pub mod validation;
 
 pub use error::AppError;
