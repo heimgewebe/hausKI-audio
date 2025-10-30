@@ -12,7 +12,50 @@ dev = ["pytest", "ruff", "black", "mypy"]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["scripts*", "tests*"]
+
 [tool.uv]
+sync = true
+dev-dependencies = [
+    "pytest",
+    "ruff",
+    "black",
+    "mypy",
+]
 # Minimal-Konfig – reicht, um CI-Assertion zu erfüllen
 index-url = "https://pypi.org/simple"
 python-preference = "system"
+
+[tool.ruff]
+line-length = 79
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "D100", # Missing docstring in public module
+    "D104", # Missing docstring in public package
+    "D107", # Missing docstring in __init__
+    "D203", # 1 blank line required before class docstring
+    "D212", # Multi-line docstring summary should start at the first line
+    "D415", # First line of docstring should be in imperative mood
+    "E501", # Line too long (handled by black)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "S603"]
+
+[tool.black]
+line-length = 79
+target-version = ["py311"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = ["tests"]
+addopts = "-ra -q"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true

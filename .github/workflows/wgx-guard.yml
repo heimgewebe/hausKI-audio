@@ -1,8 +1,11 @@
+---
 name: WGX Guard
+permissions:
+  contents: read
 
-on:
+"on":
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
 
 jobs:
@@ -33,8 +36,12 @@ jobs:
           expected = {
               "name": "hauski-audio",
               "version": "0.1.0",
-              "description": "HausKI Audio Layer – MOTU, Lake, Qobuz, Local Sound Stack",
-              "authors": [{"name": "Alexander Mohr", "email": "alexdermohr@gmail.com"}],
+              "description": (
+                  "HausKI Audio Layer – MOTU, Lake, Qobuz, Local Sound Stack"
+              ),
+              "authors": [
+                  {"name": "Alexander Mohr", "email": "alexdermohr@gmail.com"}
+              ],
               "requires-python": ">=3.10",
           }
           uv_expected = {
@@ -46,12 +53,16 @@ jobs:
               "build-backend": "setuptools.build_meta",
           }
 
-          data = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+          data = tomllib.loads(
+              Path("pyproject.toml").read_text(encoding="utf-8")
+          )
 
           project = data.get("project")
           assert project, "[project] table missing"
           for key, value in expected.items():
-              assert project.get(key) == value, f"project.{key} should be {value!r}"
+              assert project.get(key) == value, (
+                  f"project.{key} should be {value!r}"
+              )
 
           tool = data.get("tool", {})
           uv = tool.get("uv")
@@ -62,7 +73,9 @@ jobs:
           build = data.get("build-system")
           assert build, "[build-system] table missing"
           for key, value in build_expected.items():
-              assert build.get(key) == value, f"build-system.{key} should be {value!r}"
+              assert build.get(key) == value, (
+                  f"build-system.{key} should be {value!r}"
+              )
           PY
 
       - name: Install PyYAML
@@ -74,21 +87,39 @@ jobs:
           from pathlib import Path
           import yaml
 
-          data = yaml.safe_load(Path('.wgx/profile.yml').read_text(encoding='utf-8'))
+          data = yaml.safe_load(
+              Path('.wgx/profile.yml').read_text(encoding='utf-8')
+          )
 
-          assert data.get('profile') == 'hauski-audio', "profile must be 'hauski-audio'"
-          assert data.get('description') == 'Local audio orchestration layer for HausKI', "description mismatch"
+          assert data.get('profile') == 'hauski-audio', (
+              "profile must be 'hauski-audio'"
+          )
+          assert data.get('description') == (
+              'Local audio orchestration layer for HausKI'
+          ), "description mismatch"
           assert data.get('lang') == 'python', "lang must be 'python'"
-          assert data.get('wgx-version') == '>=0.3', "wgx-version must be '>=0.3'"
+          assert data.get('wgx-version') == '>=0.3', (
+              "wgx-version must be '>=0.3'"
+          )
 
           meta = data.get('meta') or {}
-          assert meta.get('repo') == 'alexdermohr/hauski-audio', "meta.repo mismatch"
-          assert meta.get('maintainer') == 'alexdermohr@gmail.com', "meta.maintainer mismatch"
-          assert meta.get('tags') == ['audio', 'motu', 'qobuz', 'hauski', 'wgx'], "meta.tags mismatch"
+          assert meta.get('repo') == 'alexdermohr/hauski-audio', (
+              "meta.repo mismatch"
+          )
+          assert meta.get('maintainer') == 'alexdermohr@gmail.com', (
+              "meta.maintainer mismatch"
+          )
+          assert meta.get('tags') == [
+              'audio', 'motu', 'qobuz', 'hauski', 'wgx'
+          ], "meta.tags mismatch"
 
           env = data.get('env') or {}
-          assert env.get('PYTHONUNBUFFERED') == '1', "env.PYTHONUNBUFFERED mismatch"
-          assert env.get('UV_PIP_VERSION') == '24.0', "env.UV_PIP_VERSION mismatch"
+          assert env.get('PYTHONUNBUFFERED') == '1', (
+              "env.PYTHONUNBUFFERED mismatch"
+          )
+          assert env.get('UV_PIP_VERSION') == '24.0', (
+              "env.UV_PIP_VERSION mismatch"
+          )
           PY
 
       - name: Validate Justfile content
@@ -99,11 +130,14 @@ jobs:
           content = Path('Justfile').read_text(encoding='utf-8')
           required_chunks = [
               'set shell := ["bash", "-cu"]',
-              'default:\n    @echo "🧵 HausKI Audio Layer – choose a target (lint, test, run, doctor)"',
+              ('default:\n    @echo "🧵 HausKI Audio Layer – choose a target '
+               '(lint, test, run, doctor)"'),
               'lint:\n    uv run ruff check .\n    uv run black --check .',
               'test:\n    uv run pytest -q || echo "⚠️ no tests yet"',
               'doctor:\n    @echo "🔎 Environment check"',
           ]
           for chunk in required_chunks:
-              assert chunk in content, f"Justfile missing required block: {chunk!r}"
+              assert chunk in content, (
+                  f"Justfile missing required block: {chunk!r}"
+              )
           PY

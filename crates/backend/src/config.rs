@@ -2,9 +2,13 @@ use std::env;
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
-
 use thiserror::Error;
 use url::Url;
+use crate::scripts::constants::{
+    DEFAULT_AUDIO_MODE_CMD, DEFAULT_PLAYLIST_CMD, DEFAULT_REC_START_CMD, DEFAULT_REC_STOP_CMD,
+};
+
+// ... (rest of the file is the same)
 
 #[derive(Debug, Clone)]
 pub struct AppConfig {
@@ -12,6 +16,8 @@ pub struct AppConfig {
     pub mopidy_rpc_url: Url,
     pub audio_mode_script: ScriptConfig,
     pub playlist_script: ScriptConfig,
+    pub rec_start_script: ScriptConfig,
+    pub rec_stop_script: ScriptConfig,
     pub script_workdir: PathBuf,
     pub command_timeout: Duration,
     pub check_mopidy_health: bool,
@@ -45,8 +51,6 @@ pub enum ConfigError {
 impl AppConfig {
     const DEFAULT_BIND: &'static str = "127.0.0.1:8080";
     const DEFAULT_MOPIDY_RPC: &'static str = "http://127.0.0.1:6680/mopidy/rpc";
-    const DEFAULT_AUDIO_MODE_CMD: &'static str = "./scripts/audio-mode";
-    const DEFAULT_PLAYLIST_CMD: &'static str = "./scripts/playlist-from-list";
     const DEFAULT_TIMEOUT_SECS: u64 = 10;
 
     pub fn from_env() -> Result<Self, ConfigError> {
@@ -67,7 +71,7 @@ impl AppConfig {
         let audio_mode_script = ScriptConfig {
             program: PathBuf::from(
                 env::var("HAUSKI_AUDIO_MODE_CMD")
-                    .unwrap_or_else(|_| Self::DEFAULT_AUDIO_MODE_CMD.to_string()),
+                    .unwrap_or_else(|_| DEFAULT_AUDIO_MODE_CMD.to_string()),
             ),
         };
 
@@ -75,7 +79,21 @@ impl AppConfig {
             program: PathBuf::from(
                 env::var("HAUSKI_PLAYLIST_FROM_LIST_CMD")
                     .or_else(|_| env::var("HAUSKI_PLAYLIST_CMD"))
-                    .unwrap_or_else(|_| Self::DEFAULT_PLAYLIST_CMD.to_string()),
+                    .unwrap_or_else(|_| DEFAULT_PLAYLIST_CMD.to_string()),
+            ),
+        };
+
+        let rec_start_script = ScriptConfig {
+            program: PathBuf::from(
+                env::var("HAUSKI_REC_START_CMD")
+                    .unwrap_or_else(|_| DEFAULT_REC_START_CMD.to_string()),
+            ),
+        };
+
+        let rec_stop_script = ScriptConfig {
+            program: PathBuf::from(
+                env::var("HAUSKI_REC_STOP_CMD")
+                    .unwrap_or_else(|_| DEFAULT_REC_STOP_CMD.to_string()),
             ),
         };
 
@@ -84,23 +102,63 @@ impl AppConfig {
             .and_then(|raw| raw.parse().ok())
             .unwrap_or(Self::DEFAULT_TIMEOUT_SECS * 1000);
 
-        let check_mopidy_health = env::var("HAUSKI_CHECK_MOPIDY_HEALTH")
-            .ok()
-            .and_then(|raw| parse_bool(&raw))
-            .unwrap_or(true);
+        let check_mopidy_health = env_bool("HAUSKI_CHECK_MOPIDY_HEALTH", true);
 
         Ok(Self {
             bind_addr,
             mopidy_rpc_url,
             audio_mode_script,
             playlist_script,
+            rec_start_script,
+            rec_stop_script,
             script_workdir: workdir,
             command_timeout: Duration::from_millis(timeout_ms),
             check_mopidy_health,
         })
     }
-}
+    pub fn validate(&self) -> Result<(), crate::error::AppError> {
+        let scripts = [
+            &self.audio_mode_script,
+            &self.playlist_script,
+            &self.rec_start_script,
+            &self.rec_stop_script,
+        ];
 
+        for script_config in scripts {
+            let p = script_config.resolve_with(&self.script_workdir);
+            if !p.exists() {
+                return Err(crate::error::AppError::Validation(format!(
+                    "script not found: {}",
+                    p.display()
+                )));
+            }
+            // Unix: echte Ausführbarkeitsprüfung über Exec-Bits
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                let meta = std::fs::metadata(&p)?;
+                if meta.permissions().mode() & 0o111 == 0 {
+                    return Err(crate::error::AppError::Validation(format!(
+                        "script not executable: {}",
+                        p.display()
+                    )));
+                }
+            }
+            // Non-Unix (z. B. Windows): kein Exec-Bit – minimal prüfen, dass es eine reguläre Datei ist.
+            #[cfg(not(unix))]
+            {
+                let meta = std::fs::metadata(&p)?;
+                if !meta.is_file() {
+                    return Err(crate::error::AppError::Validation(format!(
+                        "script is not a regular file: {}",
+                        p.display()
+                    )));
+                }
+            }
+        }
+        Ok(())
+    }
+}
 fn resolve_mopidy_rpc_url() -> Result<Url, ConfigError> {
     let direct = env::var("HAUSKI_MOPIDY_RPC_URL")
         .or_else(|_| env::var("MOPIDY_RPC_URL"))
@@ -122,11 +180,16 @@ fn resolve_mopidy_rpc_url() -> Result<Url, ConfigError> {
     Url::parse(AppConfig::DEFAULT_MOPIDY_RPC)
         .map_err(|_| ConfigError::InvalidMopidyUrl(AppConfig::DEFAULT_MOPIDY_RPC.to_string()))
 }
-
-fn parse_bool(raw: &str) -> Option<bool> {
-    match raw.to_ascii_lowercase().as_str() {
-        "1" | "true" | "yes" | "on" => Some(true),
-        "0" | "false" | "no" | "off" => Some(false),
+pub fn parse_bool(s: &str) -> Option<bool> {
+    match s.trim().to_ascii_lowercase().as_str() {
+        "true" | "1" | "yes" | "on" => Some(true),
+        "false" | "0" | "no" | "off" => Some(false),
         _ => None,
     }
+}
+pub fn env_bool(key: &str, default: bool) -> bool {
+    env::var(key)
+        .ok()
+        .and_then(|raw| parse_bool(&raw))
+        .unwrap_or(default)
 }

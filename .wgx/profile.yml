@@ -1,10 +1,35 @@
-# hauski-audio – WGX Profil
-environment: development
-features:
-  - core
-# Optionale Felder für spätere Fleet-Runs:
-# repo:
-#   role: app
-#   tags: [audio, mopidy, backend]
-# ci:
-#   smoke: true
+# WGX Profil für hauski-audio – von CI-Guard ausgewertet
+profile: hauski-audio
+description: "WGX profile for the heimgewebe/hauski-audio repository; validated in CI."
+wgx-version: ">=2.0.0"
+
+# Genutzte Sprachen im Repo
+lang:
+  - rust
+  - python
+  - shell
+
+# Metadaten, die der Guard prüfen darf
+meta:
+  org: heimgewebe
+  repo: hauski-audio
+  ci: true
+
+rust:
+  # CI/Local Toolchain
+  toolchain: "stable"
+
+python:
+  # uv wird verwendet
+  uv: true
+
+tool:
+  uv:
+    # Guard erwartet sync=true (spiegelt pyproject.toml)
+    sync: true
+
+# Explizite Umgebungsvariablen, die der Guard erwartet/prüft
+env:
+  UV_SYSTEM_PYTHON: "1"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  RUSTFLAGS: "-C debuginfo=0"

@@ -3,9 +3,24 @@ use axum::response::{IntoResponse, Response};
 use axum::Json;
 use serde_json::json;
 use thiserror::Error;
+use crate::config::ConfigError;
 
 #[derive(Debug, Error)]
 pub enum AppError {
+    #[error("failed to load configuration: {0}")]
+    Config(#[from] ConfigError),
+    #[error("request to Mopidy failed: {0}")]
+    Mopidy(#[from] reqwest::Error),
+    #[error("failed to execute command: {0}")]
+    Command(#[from] std::io::Error),
+    #[error("an unexpected error occurred: {0}")]
+    Anyhow(#[from] anyhow::Error),
+    #[error("command returned non-zero exit code: {0}")]
+    CommandStatus(String),
+    #[error("configuration validation failed: {0}")]
+    Validation(String),
+    #[error("startup failed: {0}")]
+    Startup(String),
     #[error("{0}")]
     BadRequest(String),
     #[error("{0}")]
@@ -30,14 +45,14 @@ impl AppError {
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        let (status, message) = match &self {
-            AppError::BadRequest(message) => (StatusCode::BAD_REQUEST, message.as_str()),
-            AppError::Upstream(message) => (StatusCode::BAD_GATEWAY, message.as_str()),
-            AppError::Internal(message) => (StatusCode::INTERNAL_SERVER_ERROR, message.as_str()),
+        let status = match &self {
+            AppError::Validation(_) | AppError::BadRequest(_) => StatusCode::BAD_REQUEST,
+            AppError::Mopidy(_) | AppError::Upstream(_) => StatusCode::BAD_GATEWAY,
+            _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
         let payload = json!({
-            "error": message,
+            "error": self.to_string(),
         });
 
         (status, Json(payload)).into_response()

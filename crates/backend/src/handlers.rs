@@ -60,14 +60,16 @@ pub async fn proxy_rpc(
     Ok(Json(response))
 }
 
+
 #[instrument(skip(state))]
 pub async fn get_mode(State(state): State<AppState>) -> Result<Json<ModeGetResponse>, AppError> {
-    let output = scripts::show_mode(&state.config).await?;
-    let trimmed = output.stdout.trim().to_string();
+    let script_path = state.config.audio_mode_script.program.to_str().unwrap_or_default();
+    let output = scripts::runner::run_script(&state.config, script_path, &["show"], None).await?;
+    let trimmed = output.trim().to_string();
     let inferred = crate::models::AudioMode::infer(&trimmed);
 
     Ok(Json(ModeGetResponse {
-        value: trimmed,
+        value: trimmed.clone(),
         mode: inferred,
     }))
 }
@@ -77,10 +79,11 @@ pub async fn set_mode(
     State(state): State<AppState>,
     Json(body): Json<ModeSetRequest>,
 ) -> Result<Json<CommandResponse>, AppError> {
-    let output = scripts::set_mode(&state.config, &body).await?;
+    let script_path = state.config.audio_mode_script.program.to_str().unwrap_or_default();
+    let output = scripts::runner::run_script(&state.config, script_path, &[body.mode.as_str()], None).await?;
     Ok(Json(CommandResponse {
-        stdout: output.stdout,
-        stderr: output.stderr,
+        stdout: output.trim().to_string(),
+        stderr: "".to_string(),
     }))
 }
 
@@ -89,20 +92,26 @@ pub async fn playlist_from_list(
     State(state): State<AppState>,
     Json(body): Json<PlaylistRequest>,
 ) -> Result<Json<PlaylistResponse>, AppError> {
-    let output = scripts::playlist_from_list(&state.config, &body).await?;
+    let script_path = state.config.playlist_script.program.to_str().unwrap_or_default();
+    let uris = body.uris.join("\n");
+    let output = scripts::runner::run_script(&state.config, script_path, &[&body.name, "--input", "-"], Some(&uris)).await?;
     Ok(Json(PlaylistResponse {
-        stdout: output.stdout,
-        stderr: output.stderr,
+        stdout: output.trim().to_string(),
+        stderr: "".to_string(),
     }))
 }
+
 
 #[instrument(skip(state, params))]
 pub async fn discover_similar(
     State(state): State<AppState>,
     Query(params): Query<SimilarQuery>,
 ) -> Result<Json<SimilarResponse>, AppError> {
+    if params.seed.trim().is_empty() {
+        return Err(AppError::bad_request("seed must not be empty"));
+    }
     let response =
-        discover::similar_tracks(state.mopidy.as_ref(), &params.seed, params.limit).await?;
+        discover::similar_tracks(&*state.mopidy, &params.seed, params.limit).await?;
 
     Ok(Json(response))
 }

@@ -10,8 +10,12 @@ SCRIPTS_DIR = REPO_ROOT / "scripts"
 
 
 def run_script(
-    script: str, args: list[str], home: Path, extra_env: dict[str, str] | None = None
-):
+    script: str,
+    args: list[str],
+    home: Path,
+    extra_env: dict[str, str] | None = None,
+) -> subprocess.CompletedProcess[str]:
+    """Run a script in a controlled environment."""
     env = os.environ.copy()
     env.update(
         {
@@ -19,25 +23,36 @@ def run_script(
             "AUDIO_RECORD_DIR": str(home / "recordings"),
             "AUDIO_RECORD_EXT": "wav",
             "PW_RECORD_BINARY": "pw-record",
-        }
+        },
     )
     if extra_env:
         env.update(extra_env)
     cmd = ["python3", str(SCRIPTS_DIR / script), *args]
-    return subprocess.run(cmd, capture_output=True, text=True, env=env, cwd=REPO_ROOT)
+    return subprocess.run(
+        cmd,
+        check=False,
+        capture_output=True,
+        text=True,
+        env=env,
+        cwd=REPO_ROOT,
+    )
 
 
-@pytest.fixture()
-def home(tmp_path):
+@pytest.fixture
+def home(tmp_path: Path) -> Path:
+    """Create a temporary home directory."""
     home_dir = tmp_path / "home"
     home_dir.mkdir()
     return home_dir
 
 
-def test_rec_start_dry_run_json(home):
+def test_rec_start_dry_run_json(home: Path) -> None:
+    """Verify that `rec-start --dry-run --json` produces sane output."""
     target = home / "output.wav"
     result = run_script(
-        "rec-start", ["--dry-run", "--json", "--output", str(target)], home
+        "rec-start",
+        ["--dry-run", "--json", "--output", str(target)],
+        home,
     )
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
@@ -46,8 +61,9 @@ def test_rec_start_dry_run_json(home):
     assert payload["command"][-1] == str(target)
 
 
-def test_rec_start_detects_running_process(home):
-    proc = subprocess.Popen(["sleep", "5"])  # noqa: S603, S607 (controlled command)
+def test_rec_start_detects_running_process(home: Path) -> None:
+    """Verify that `rec-start` aborts if a recording is already running."""
+    proc = subprocess.Popen(["sleep", "5"])  # noqa: S607 (controlled command)
     try:
         state_dir = home / ".cache" / "hauski-audio"
         state_dir.mkdir(parents=True)
@@ -63,8 +79,9 @@ def test_rec_start_detects_running_process(home):
             proc.kill()
 
 
-def test_rec_start_force_clears_running_process(home):
-    proc = subprocess.Popen(["sleep", "5"])  # noqa: S603, S607
+def test_rec_start_force_clears_running_process(home: Path) -> None:
+    """Verify that `rec-start --force` removes an existing PID file."""
+    proc = subprocess.Popen(["sleep", "5"])  # noqa: S607
     try:
         state_dir = home / ".cache" / "hauski-audio"
         pid_file = state_dir / "recording.pid"
@@ -93,7 +110,8 @@ def test_rec_start_force_clears_running_process(home):
             proc.kill()
 
 
-def test_rec_start_rejects_existing_output(home):
+def test_rec_start_rejects_existing_output(home: Path) -> None:
+    """Verify that `rec-start` aborts if the output file already exists."""
     target = home / "recordings" / "exists.wav"
     target.parent.mkdir(parents=True)
     target.write_bytes(b"test")
@@ -108,8 +126,9 @@ def test_rec_start_rejects_existing_output(home):
     assert "Output file already exists" in result.stdout
 
 
-def test_rec_stop_dry_run_json(home):
-    proc = subprocess.Popen(["sleep", "5"])  # noqa: S603, S607
+def test_rec_stop_dry_run_json(home: Path) -> None:
+    """Verify that `rec-stop --dry-run --json` produces sane output."""
+    proc = subprocess.Popen(["sleep", "5"])  # noqa: S607
     state_dir = home / ".cache" / "hauski-audio"
     state_dir.mkdir(parents=True)
     (state_dir / "recording.pid").write_text(f"{proc.pid}\n")
@@ -128,7 +147,8 @@ def test_rec_stop_dry_run_json(home):
             proc.kill()
 
 
-def test_rec_stop_requires_pid_file(home):
+def test_rec_stop_requires_pid_file(home: Path) -> None:
+    """Verify that `rec-stop` fails if no PID file is present."""
     result = run_script("rec-stop", [], home)
     assert result.returncode == 1
     assert "No recorder PID state found" in result.stdout
