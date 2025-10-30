@@ -111,3 +111,32 @@ pub struct SimilarResponse {
     pub query: String,
     pub tracks: Vec<SimilarTrack>,
 }
+
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct Track {
+    pub title: String,
+    pub album: String,
+    pub artist: String,
+}
+
+impl Track {
+    pub fn new<T: Into<String>>(title: T, album: T, artist: T) -> Self {
+        Self {
+            title: title.into(),
+            album: album.into(),
+            artist: artist.into(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn build_track() {
+        let t = Track::new("Song", "Album", "Artist");
+        assert_eq!(t.title, "Song");
+        assert_eq!(t.album, "Album");
+        assert_eq!(t.artist, "Artist");
+    }
+}
