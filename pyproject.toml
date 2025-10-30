@@ -17,6 +17,7 @@ where = ["."]
 include = ["scripts*", "tests*"]
 
 [tool.uv]
+sync = true
 # Minimal-Konfig – reicht, um CI-Assertion zu erfüllen
 index-url = "https://pypi.org/simple"
 python-preference = "system"
