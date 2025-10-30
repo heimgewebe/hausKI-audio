@@ -1,13 +1,16 @@
-# hauski-audio – WGX Profil
-environment: development
-features:
-  - core
-# Optionale Felder für spätere Fleet-Runs:
-# repo:
-#   role: app
-#   tags: [audio, mopidy, backend]
-# ci:
-#   smoke: true
+# WGX Profil für hausKI-audio – minimal, CI-fähig
+# Wird von CI-Skripten geprüft; fehlende Datei führte zum Abbruch.
+profile: default
+
+rust:
+  # Toolchain, die CI/Local verwenden darf (kann 'stable' oder eine feste Version sein)
+  toolchain: "stable"
+
+python:
+  # uv wird genutzt, CI erwartet sync=true (siehe pyproject.toml)
+  uv: true
+
 tool:
   uv:
+    # explizit gespiegelt zur Prüf-Logik in CI
     sync: true
