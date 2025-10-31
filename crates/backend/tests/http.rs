@@ -82,12 +82,18 @@ impl FakeMopidy {
 #[async_trait]
 impl MopidyClient for FakeMopidy {
     async fn proxy(&self, payload: Value) -> Result<Value, AppError> {
+        // Method extrahieren, ohne Lock zu halten
         let method = payload
             .get("method")
             .and_then(Value::as_str)
             .unwrap_or_default()
             .to_string();
-        self.calls.lock().unwrap().push(method.clone());
+
+        // Lock nur für den Push halten; danach explizit freigeben
+        {
+            let mut calls = self.calls.lock().unwrap();
+            calls.push(method.clone());
+        } // <- Lock fällt hier; kein "Poisoning"-Kaskadenrisiko mehr
 
         let id = payload.get("id").cloned().unwrap_or(Value::from(1));
         let mut response = Map::new();

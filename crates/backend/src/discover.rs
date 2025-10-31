@@ -91,10 +91,13 @@ fn build_query(track: &Value) -> Option<String> {
 
 fn build_track(track: &Value) -> Option<SimilarTrack> {
     let uri = track.get("uri").and_then(Value::as_str)?.to_string();
+
+    // Name MUSS existieren und nicht leer sein
     let name = track
         .get("name")
         .and_then(Value::as_str)
-        .unwrap_or("")
+        .map(str::trim)
+        .filter(|s| !s.is_empty())?
         .to_string();
     let album = track
         .get("album")

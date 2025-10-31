@@ -25,28 +25,30 @@ pub fn app_routes(state: AppState) -> Router {
 
 #[instrument(skip(state))]
 pub async fn health(State(state): State<AppState>) -> Result<Json<HealthResponse>, AppError> {
-    let mut overall = "ok";
-    let mopidy_status = if state.config.check_mopidy_health {
+    let (overall_status, mopidy_status) = if state.config.check_mopidy_health {
         match state.mopidy.health_check().await {
-            Ok(_) => Some(MopidyHealth {
-                status: "ok",
-                detail: None,
-            }),
-            Err(err) => {
-                overall = "degraded";
+            Ok(_) => (
+                "ok",
                 Some(MopidyHealth {
-                    status: "error",
+                    status: "ok".to_string(),
+                    detail: None,
+                }),
+            ),
+            Err(err) => (
+                "degraded",
+                Some(MopidyHealth {
+                    status: "error".to_string(),
                     detail: Some(err),
-                })
-            }
+                }),
+            ),
         }
     } else {
-        None
+        ("ok", None)
     };
 
     Ok(Json(HealthResponse {
-        status: overall,
-        version: env!("CARGO_PKG_VERSION"),
+        status: overall_status.to_string(),
+        version: Some(env!("CARGO_PKG_VERSION").to_string()),
         mopidy: mopidy_status,
     }))
 }
