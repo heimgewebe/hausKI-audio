@@ -75,15 +75,16 @@ pub struct PlaylistResponse {
 
 #[derive(Debug, Serialize)]
 pub struct HealthResponse {
-    pub status: &'static str,
-    pub version: &'static str,
+    pub status: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mopidy: Option<MopidyHealth>,
 }
 
 #[derive(Debug, Serialize)]
 pub struct MopidyHealth {
-    pub status: &'static str,
+    pub status: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub detail: Option<String>,
 }
