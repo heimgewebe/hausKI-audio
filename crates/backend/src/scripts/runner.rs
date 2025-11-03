@@ -1,10 +1,9 @@
+use crate::config::AppConfig;
 use anyhow::{anyhow, Context, Result};
 use std::process::Stdio;
 use tokio::io::AsyncWriteExt;
 use tokio::process::Command;
 use tokio::time;
-use crate::config::AppConfig;
-
 
 pub async fn run_script(
     config: &AppConfig,
@@ -30,17 +29,23 @@ pub async fn run_script(
 
     if let Some(payload) = input {
         if let Some(mut stdin) = child.stdin.take() {
-            stdin.write_all(payload.as_bytes()).await
+            stdin
+                .write_all(payload.as_bytes())
+                .await
                 .with_context(|| format!("failed to write to stdin for {}", program))?;
         }
     }
 
     let output = time::timeout(config.command_timeout, child.wait_with_output())
         .await
-        .map_err(|_| anyhow!("command {} timed out after {:?}", program, config.command_timeout))
-        .and_then(|result| {
-            result.with_context(|| format!("command {} error", program))
-        })?;
+        .map_err(|_| {
+            anyhow!(
+                "command {} timed out after {:?}",
+                program,
+                config.command_timeout
+            )
+        })
+        .and_then(|result| result.with_context(|| format!("command {} error", program)))?;
 
     if !output.status.success() {
         return Err(anyhow!(
