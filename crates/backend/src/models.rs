@@ -30,14 +30,6 @@ impl AudioMode {
 #[derive(Debug, Deserialize)]
 pub struct ModeSetRequest {
     pub mode: AudioMode,
-    #[serde(default)]
-    pub restart: bool,
-    #[serde(default)]
-    pub config: Option<String>,
-    #[serde(default)]
-    pub alsa_output: Option<String>,
-    #[serde(default)]
-    pub pulse_output: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -58,12 +50,6 @@ pub struct CommandResponse {
 pub struct PlaylistRequest {
     pub name: String,
     pub uris: Vec<String>,
-    #[serde(default)]
-    pub scheme: Option<String>,
-    #[serde(default)]
-    pub replace: bool,
-    #[serde(default)]
-    pub dry_run: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -113,31 +99,3 @@ pub struct SimilarResponse {
     pub tracks: Vec<SimilarTrack>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct Track {
-    pub title: String,
-    pub album: String,
-    pub artist: String,
-}
-
-impl Track {
-    pub fn new<T: Into<String>>(title: T, album: T, artist: T) -> Self {
-        Self {
-            title: title.into(),
-            album: album.into(),
-            artist: artist.into(),
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn build_track() {
-        let t = Track::new("Song", "Album", "Artist");
-        assert_eq!(t.title, "Song");
-        assert_eq!(t.album, "Album");
-        assert_eq!(t.artist, "Artist");
-    }
-}
