@@ -1,0 +1,31 @@
+### 📄 crates/backend/Cargo.toml
+
+**Größe:** 629 B | **md5:** `97474e3fe0d796e6e4e7e3e00e693e50`
+
+```toml
+[package]
+name = "hauski-backend"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = { version = "0.7", features = ["macros"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+tower-http = { version = "0.5", features = ["trace"] }
+reqwest = { version = "0.11", features = ["json"] }
+thiserror = "1"
+dotenvy = "0.15"
+url = "2"
+async-trait = "0.1"
+
+[dev-dependencies]
+tempfile = "3"
+tower = { version = "0.4", features = ["util"] }
+http-body-util = "0.1"
+http = "0.2"
+```
+

@@ -1,0 +1,599 @@
+# Ordner-Merge: hausKI-audio
+
+**Zeitpunkt:** 2025-10-26 22:38
+**Quelle:** `/home/alex/repos/hausKI-audio`
+**Dateien (gefunden):** 64
+**Gesamtgröße (roh):** 291 KB
+
+**Exclude:** ['.gitignore']
+
+## 📁 Struktur
+
+- hausKI-audio/
+  - .editorconfig
+  - .env.example
+  - .gitattributes
+  - .gitignore
+  - .hauski-reports
+  - Cargo.lock
+  - Cargo.toml
+  - Justfile
+  - README.md
+  - pyproject.toml
+  - tests/
+    - __init__.py
+    - test_audio_mode.py
+    - test_rec_scripts.py
+  - docs/
+    - ARCHITECTURE.md
+    - README_ALSA.md
+    - io-contracts.md
+    - troubleshooting.md
+    - vibe-detection.md
+    - adr/
+      - 0001-player-backend-mopidy-qobuz.md
+      - 0002-audio-path-pulse-vs-alsa.md
+      - 0003-repo-standards-docs-ci.md
+      - 0004-recording-pw-record-helper.md
+      - README.md
+    - process/
+      - CONTRIBUTING.md
+    - runbooks/
+      - backend_service.md
+      - mopidy_iris_qobuz.md
+    - policies/
+      - SECURITY.md
+  - tools/
+    - systemd/
+      - hauski-backend.service
+  - .github/
+    - workflows/
+      - docs-ci.yml
+      - rust-ci.yml
+      - validate-audio-events.yml
+      - wgx-guard.yml
+  - .wgx/
+    - profile.yml
+  - .git/
+    - FETCH_HEAD
+    - HEAD
+    - ORIG_HEAD
+    - config
+    - description
+    - index
+    - packed-refs
+    - hooks/
+      - applypatch-msg.sample
+      - commit-msg.sample
+      - fsmonitor-watchman.sample
+      - post-update.sample
+      - pre-applypatch.sample
+      - pre-commit.sample
+      - pre-merge-commit.sample
+      - pre-push
+      - pre-push.sample
+      - pre-rebase.sample
+      - pre-receive.sample
+      - prepare-commit-msg.sample
+      - push-to-checkout.sample
+      - update.sample
+    - refs/
+      - remotes/
+        - origin/
+          - HEAD
+          - alert-autofix-1
+          - alert-autofix-2
+          - alert-autofix-3
+          - alert-autofix-4
+          - docs-troubleshooting-io-contracts
+          - docs-vibe-detection
+          - feat-add-audio-event-validation-workflow
+          - fix-build-errors
+          - fix-ci-config
+          - fix-ci-profile-sync
+          - fix-code-quality-improvements
+          - fix-python-test-quality
+          - fix-wgx-profile-sync
+          - fix-yaml-linting-errors
+          - main
+          - docs/
+            - audio-troubleshooting-io
+            - justfile-consistency
+          - refactor/
+          - fix/
+            - markdown-linting-errors
+            - project-config-and-lint
+            - repo-config-und-stil
+          - feature/
+            - robust-scripting-fallbacks
+          - chore/
+            - code-review
+            - improve-dev-tooling
+            - verify-linting
+          - feat/
+            - audio-events
+      - tags/
+      - heads/
+        - main
+        - backup/
+          - main-20251017-182448
+          - main-20251017-213708
+          - main-20251018-090516
+          - main-20251021-124257
+          - main-20251023-070546
+          - main-20251023-090518
+          - main-20251025-233730
+    - logs/
+      - HEAD
+      - refs/
+        - remotes/
+          - origin/
+            - HEAD
+            - alert-autofix-1
+            - alert-autofix-2
+            - alert-autofix-3
+            - alert-autofix-4
+            - docs-troubleshooting-io-contracts
+            - docs-vibe-detection
+            - feat-add-audio-event-validation-workflow
+            - fix-build-errors
+            - fix-ci-config
+            - fix-ci-profile-sync
+            - fix-code-quality-improvements
+            - fix-python-test-quality
+            - fix-wgx-profile-sync
+            - fix-yaml-linting-errors
+            - main
+            - docs/
+              - audio-troubleshooting-io
+              - justfile-consistency
+            - refactor/
+              - bereinigung-python-setup
+            - fix/
+              - dependency-and-lint-errors
+              - markdown-linting-errors
+              - project-config-and-lint
+              - repo-config-und-stil
+            - feature/
+              - robust-scripting-fallbacks
+            - chore/
+              - code-review
+              - improve-dev-tooling
+              - verify-linting
+            - feat/
+              - audio-events
+        - heads/
+          - main
+          - backup/
+            - main-20251017-182448
+            - main-20251017-213708
+            - main-20251018-090516
+            - main-20251021-124257
+            - main-20251023-070546
+            - main-20251023-090518
+            - main-20251025-233730
+    - branches/
+    - info/
+      - exclude
+      - refs
+    - objects/
+      - 48/
+        - 1d527d52d5ba703acbfd3d96d3f260bf1efc37
+        - 7698f59826f7b772bd685f89c1a30ba7117a6e
+        - e0e0b1d2632bfddd75444d81604a3846dab795
+      - e5/
+        - 179be0544a2feb71ed0dc6f74004ddc018a187
+      - 6d/
+        - 2213db16c3ee4b4c70c4d9b3ba59a2f57e4b75
+      - 0a/
+        - 9f530b3aa1a887e63fae8cede6c454991fc3af
+      - 06/
+        - 6039bb68c490176f331996f9e48a30f472bee2
+      - 2d/
+        - b00359532841fadedb4d78775d99e17e453dec
+      - d8/
+        - c33d0cd5ecc27f9858f55c7721bc2bf8773176
+      - 87/
+        - dc44a37cdda3640c7dd81b6e6d70f0628dc389
+      - ad/
+        - 9f123876184516d1a9bd78ab55b1da2da00417
+        - bd076068179797e7fc053485c3bb0358e74f97
+      - 23/
+        - 6ecb720a27cb8054aaf571e253c007f0aa54ff
+      - ac/
+        - 8c0fda0b37b147ac80e968ee095908584febf5
+      - 72/
+        - 1599874b6968f120c4e8ba62c644fff61b5543
+      - 6b/
+        - 2de191ade0daee5e261e33e17c040a23543d2f
+      - 0e/
+        - abb067c1fccacf58b2a1b0e754f90a065251b3
+        - ac34d968a52bbc5b8573f27d9ce9c9a970ed08
+        - ae069d4894640b79cee8b2bf68ff659a59add5
+        - d357c1e6ac18497373ed6a9df59311c89c3ff2
+      - e0/
+        - 335b119b2cf5d30cb22a72d5d3cc20fd32a1fb
+      - 54/
+        - 35885bd101291d91d4f6a4ddf8ec2ae83cf12a
+        - 70718468ac44da7d8082a034b31baa3c8e60f5
+        - a88c02a0c8902fc905a2dc400ac4171a6088a7
+      - 17/
+        - 03d52d47ab13579cbb298e9899583a42a03d7a
+      - fd/
+        - 5df80a626e04b9b143de4ca23f7d37fa9396a5
+      - 8f/
+        - c258351a3c5bf5b5a43e61268c9645174bcd1e
+      - b2/
+        - 97f924216bbfa9b67bfc22763985c5077d725e
+        - dea18f02866b8d3c696e0047d000d5bab0b41c
+      - 38/
+        - 5dceb9cf16f3ced012b8c033a4b8288f06b9cf
+      - 14/
+        - b67ff70748e422f4fe9bf05c120b9713f6279f
+      - 70/
+        - 3fa8c9689b15cd1cbaada1398eac3feecc5415
+        - 816078e8b90203fe31a1d5897404847a2062fc
+      - f9/
+        - 5141ac098ef08a2219e434e99cdef91cd0e7d9
+      - 77/
+        - 93be315ca3e3fce6a73f4b3d508178fe92f685
+        - 9ddb20685cc626c48de664d609f3e2fe2668d5
+      - 4a/
+        - b0807c0f6e9986b160e8b9e33cf9b457f175b2
+      - 5a/
+        - 276a1095e8e22ed0a3a189f7e62c5819559f9a
+      - 12/
+        - 0d0b59d1d5f87b909493c6859773c398d9b074
+      - 01/
+        - 3824b9d967f6e5ddf95f8f947301f1f8bb39f4
+      - f8/
+        - 018dc5f8f3b7d942c3a5d07888a2f784e273a7
+        - b74d24ce7c8da06cb7b290ded30948d33b1031
+      - 13/
+        - 6d593bf0b45764d20277bbbb7d50b244a8b044
+        - 81a9ab97ab18f9c0c6f34018940cfceb3913e0
+      - 56/
+        - 73a82566e83773924183574ec18b974e7ef472
+      - 9e/
+        - 07bf36bc7ee04ef1f0a6d4992d654cc59eea5a
+        - 66a2cee85423f58a2f2883e85ae74e46d5e618
+      - d3/
+        - 9f72ce6bac2467d965b4c5e1b13c3ca5859b13
+      - dd/
+        - a156889866b3818e054c16e18aba9edf8e6930
+      - 26/
+        - a3cdf562fde48c5da94618d26fcccacb416a28
+      - c6/
+        - 999b0980f1138260fb235561df4520d03c86ea
+      - 0f/
+        - c4fe76b75407e46726a70e6a683d7c8bb84231
+      - ab/
+        - 6a5ca1bffdb66eda40c70c59d640ffb12a95f7
+      - 57/
+        - f39d2bb9851b1e011bf7f1f74f74188de5dda4
+      - pack/
+        - pack-71f9a9c11f1485f56d420d5f8ca884dd79fa767e.idx
+        - pack-71f9a9c11f1485f56d420d5f8ca884dd79fa767e.pack
+      - 9a/
+        - 028bc66375f5605f42161522e699508b9db4da
+        - 8c09e93a9e9a5404ce8438b495f601114c560e
+        - cb92fef92e2c192e7e5d90b51394f897951f8b
+      - 11/
+        - ad21a55b0564a21c114f855c220d0cd935c638
+      - 71/
+        - 49820b8aeffcbf8b32e7dff4abe4860d4d2c5a
+        - 8cb2fb219c69290ca123ec6e13e73e85730f01
+      - c3/
+        - 2803946a286c4f3f496d80b95f142fd2a38c6b
+      - 66/
+        - 8051a6f6e4d332c07f44277006c3dd39ee0be2
+      - d7/
+        - de0eab62ae67a5d19df12e4bfbe4e0d900afba
+      - bb/
+        - 792a60aefc9b204b4c837387f80798642fc67f
+        - ffc10ffdf026a165cf9b8f6e79e862c8eadde8
+      - 18/
+        - 74f9250183cf7df5116ba8c5036ac325ed961d
+      - a4/
+        - a9250fb2c230dc127414e08e2f40ccdb549de4
+      - 84/
+        - b0ce5c1c9d22231a2fc36fb08562fb82bab932
+        - b4cb661856c2ee3359a864c6eeb9d0e928ae30
+      - fa/
+        - 98b1d9cdb3318d774eeb1dc21ea74e0bfa3dc7
+      - d1/
+        - 48bdaacf38143782cd3937e6b3818143260b69
+      - aa/
+        - 7be45be5cb46eec342f1a9e14e1c006fc6f842
+        - 902fa8e74f79df1deee540a721f9e100932f3b
+      - 4b/
+        - a556092e19d95130573e2857295bcfc1d2d36c
+      - a0/
+        - 4c44b0937a4ff42054e25c50cb62d95dec1693
+        - bca8743dae6d67560793ef4d230928607fce02
+      - 20/
+        - 613eae54e3ec2986232d25235a672afc8e6929
+      - 8a/
+        - 19c2509dda2bd1a4dcd08aa37451d81c9c4795
+      - 7b/
+        - 32e99095835e24272c1ae0554b6a5ba95be9db
+      - e6/
+        - 9de29bb2d1d6434b8b29ae775ad8c2e48c5391
+      - eb/
+        - 0fbb24e134d658215c7ed03ad17e961fb1e5a5
+      - 45/
+        - 809b44e5edfe0bc12e4eb2bf870d3b293872ca
+      - 5d/
+        - 75e37757f2a269997c7cfbd71e55b175eb8a20
+      - 8b/
+        - 0ded015102ac9c84a522bb359db553de015da1
+      - 30/
+        - 74384b1f2bb8b6c64982f50495df3a1450afd5
+        - d946af6a7a7c78846cd60a6e011ef074d1f2ad
+      - 7a/
+        - 75b6a4d239e928f1ea2609bcf3a4c17afb353a
+      - f7/
+        - 0ffb1dc96ce06df6f5d9e9d584f46eb77b4a6a
+      - 16/
+        - 2ab7b64f11c5ede5b2aae0fcec945cad2b12e0
+        - 65cc526d041a6d62b2f36a506e37fb6d4a77de
+        - 6acbb541322324938d9d138d5bc083c3b1c54a
+      - 28/
+        - 576d001e0fa9db75eca9321825b44e5bc0265d
+      - fb/
+        - 3777c83b811ca72d01197c819aeb7cad5284cf
+      - 4c/
+        - 24ca19088b134f491acc3344f6dc1078b41192
+      - 53/
+        - cedd45f0138883c70b9e4ed8000fa1728a1e48
+        - cefc688ee518d8525eacccd07f11bb01d7e761
+        - e368b3cd0d38fa895fa860b606508671a786cc
+      - 46/
+        - f3dd2ed534f3a74358aa97fb1dde2c6bdd5d6e
+      - d9/
+        - bc17254c1133a24a6cbe3268cecadfe051a2ef
+      - 03/
+        - aef2dd1c55869bf0d810d47056d15f5a3d4ac5
+      - 75/
+        - 8aaf553c8cf7b5149a84e28d59a015c7b34764
+      - e8/
+        - 305579df7124e292b75fb978e593d9941eec35
+      - 63/
+        - 2ab066d7b2cc5e4d7667316fe93dde3104cc18
+      - 1b/
+        - acdd869e148b2174a47e89ed6d86bf23aed24b
+      - 74/
+        - 95cb64a1a69ed2cf471321aff7849fea661dc5
+        - e165404ea3c73a4d7824d6c63bac0457f855ec
+      - 83/
+        - 71a2a3e783ee5e6a393b48ec7904184c530429
+      - 3a/
+        - bea85a3ace65694d3783ebbfcf22e742ac598d
+      - ce/
+        - 2cf41b441820ff55a11ae272401f6e6674e28a
+        - 48ff7dcb0f9766619de909187b2737870b6eac
+      - b3/
+        - 0bddc50babb33675fb63960c53272a3810a6e9
+      - 81/
+        - ac438092f489bc66eda97c4ad4f3fe95b06b0c
+      - a5/
+        - 4247765b469da03fc5128cc76548c9fda21838
+      - c8/
+        - 0a7ba4daf3445330a6f0a7d82b28cf83a5d639
+      - 9c/
+        - 0eb4394ab46ef20a2966abc038d45920513d40
+      - 73/
+        - 69d4f26e1d623095986beb9a7099587a2c0b09
+        - a740827568775d9f81d4a27956ab0ab5f09f2f
+      - 10/
+        - ce66c08f28d5ba5acd7a90080134fd319edaef
+        - e83077b5bfcb34fa19fd958560beb1beeb818b
+      - 1c/
+        - 8335726450220e836b4b9d9ac7c4abfadb61b9
+      - 41/
+        - 1979b3912ae697ef49bc8b8c3042fbf0d5bd3e
+      - e1/
+        - e1fab9b43a0f44dd11f572a31f410bf5cf220c
+      - b4/
+        - a9fd0a02fd9ce4508b10be7e8abbceec4fdee5
+      - 58/
+        - 21a46bbc7475d24bfbf0a9fed52de5deaa434e
+      - 55/
+        - 7830f65738f2ccab03cb66676c89a12f65673e
+      - b1/
+        - d409a08e9e9bd51e3c98b5e5efa112d17e91fd
+        - db6d939a097f5cd9cc9632a043be9c426d0b62
+      - 85/
+        - 0ce339345c739357417ffeaa4fb82474f07679
+        - 6fd34e1885e36222ce2cb0eb99a5180eab42e2
+      - 04/
+        - bdd718209eeb9a09dfac1a07dbf0f9cde39ad2
+      - 1a/
+        - 44dd93798833307a4e9be473d22b2fe69b1c08
+        - 61823dcc4fc8d081a5511aa69eb42c3c5cb0d0
+      - f2/
+        - 0bb660dc8434a62269faf7de8cd124da87af0d
+      - 91/
+        - 4a6e71854ada3df51d4b981db6f1b873776dea
+      - 8c/
+        - c489e45c572901e54ac7eb62e176d101866282
+      - 7f/
+        - c3675d1ca34d074a044eed6cd9dc76df7ce93d
+        - f2e914b62a0627874865334cb12b23c87e4969
+        - f6ce8233d823647b30de3bae375af446a5d1cb
+      - 25/
+        - 0d530cea7184c1e1e18cf3384cdaccdf98b3fb
+        - 9644b4007d58cc910e8e6a235aaa53c63e1929
+      - c0/
+        - 5cc0938d7445f2d1edb3dee4da53c35a4cae6d
+      - 43/
+        - 300f484c87d86b6263f723cfdd6a0efa76a617
+        - b1f13824ff2159b340323d2888be7b2f89b1a4
+      - c1/
+        - 581aba1c9ed7ebc29c727df0ce20ef3d1b9561
+      - 07/
+        - be22e1d62c0f9e0273efa840084d49e26e32a3
+      - 05/
+        - f63ca16ebd063ee6dd4f5621d03d8cd735659f
+        - f98169ba8de635b9ab00c935ebb41331431313
+      - c5/
+        - d0c4a0c46184a55f67e89c2b5c71487fc9f633
+      - db/
+        - 0ad91a04192e72cb3b58c4248a0db3c3594919
+        - 3e2ce04e5fecec1e77c8e179bc8a01ab9c3bd4
+      - a7/
+        - 0db28893074882bd17e15b0a805b040e95bd64
+      - e3/
+        - 3c2791fb3834c87ee951de3fad085c91ca3beb
+        - 6867da5217db9a533a41ab907823e5f425af44
+        - 8ddec139f116395871ccf087d7fb1c5c452e8c
+      - ea/
+        - 92570694151abf6209b992d78a9efc8c0e8d1b
+      - b8/
+        - f33a614997f1be9228223fbcc5bab0f2841e22
+      - 52/
+        - d7ec9aaceb496f41aa2ad26e666a35f3c93daf
+      - 93/
+        - 00afb9fc42079d68e68becbb9870387f79d19f
+      - 67/
+        - 3e9300d705bd5feac402c15face55442f557a7
+        - 86eecd6953410d20bbc9d15d4d2ef28e38077b
+      - be/
+        - 592c7dcf14d9dc666bff991fd6c91a96deb22e
+      - c2/
+        - a39957bfa3f2246f78809c7a52536c051c4cc6
+      - info/
+        - commit-graph
+        - packs
+      - 15/
+        - 1a07cd377f79ec5065cbb3c47b65df6ce2b583
+      - 88/
+        - dc3cf8d2921142e1b4d9c847a4718fcd750f39
+        - f5e8a2cb7c44e78b0d9280965a155eb259ce45
+      - cf/
+        - 10e3b7a7b2c194bd0291b1879b0828b2c0e93c
+      - 33/
+        - a4bc536139a05986e906468680d96af81461e0
+      - 34/
+        - 5bfd93aa60c749c0e1e142f07ece53b43a6448
+        - c7c253241994fbc5cc6e96fa0c097a59a7a1b2
+      - 5c/
+        - 0fa1ad1eacc4492c6c1a29f2546c1574c51115
+      - ba/
+        - d7261c19283f1594f6ff8279714f13bba842e7
+      - b7/
+        - 8ce6c1963feac6d08a2cc9a64961e84d05c48f
+      - ef/
+        - f44109ba642a182c0011099e5ba7ac40e8addb
+      - a2/
+        - da252c01f56a3b4332e8cc39e075c6d9c91384
+        - fc57a7d25ba00bc9beeae942eaa6535f6bf4c2
+      - 7e/
+        - 00c966b4cd9794764da1aa1acfd449313af013
+        - a2f99af2724e58d1c5f5f53074991eedcc63f5
+  - merges/
+    - hausKI-audio_merge_2510262237__.github_workflows.md
+    - hausKI-audio_merge_2510262237__.wgx.md
+    - hausKI-audio_merge_2510262237__crates_backend.md
+    - hausKI-audio_merge_2510262237__crates_backend_src.md
+    - hausKI-audio_merge_2510262237__crates_backend_tests.md
+    - hausKI-audio_merge_2510262237__docs.md
+    - hausKI-audio_merge_2510262237__docs_adr.md
+    - hausKI-audio_merge_2510262237__docs_policies.md
+    - hausKI-audio_merge_2510262237__docs_process.md
+    - hausKI-audio_merge_2510262237__docs_runbooks.md
+    - hausKI-audio_merge_2510262237__index.md
+    - hausKI-audio_merge_2510262237__part001.md
+    - hausKI-audio_merge_2510262237__root.md
+    - hausKI-audio_merge_2510262237__scripts.md
+    - hausKI-audio_merge_2510262237__tests.md
+    - hausKI-audio_merge_2510262237__tools_systemd.md
+    - hausKI-audio_merge_2510262238__index.md
+  - crates/
+    - backend/
+      - Cargo.toml
+      - tests/
+        - http.rs
+      - src/
+        - config.rs
+        - discover.rs
+        - error.rs
+        - handlers.rs
+        - lib.rs
+        - main.rs
+        - models.rs
+        - mopidy.rs
+        - scripts.rs
+  - scripts/
+    - README.md
+    - audio-mode
+    - playlist-from-list
+    - rec-start
+    - rec-stop
+
+## 📦 Inhalte (Chunks)
+
+- .editorconfig → `hausKI-audio_merge_2510262238__root.md`
+- .env.example → `hausKI-audio_merge_2510262238__root.md`
+- .gitattributes → `hausKI-audio_merge_2510262238__root.md`
+- .gitignore → `hausKI-audio_merge_2510262238__root.md`
+- Cargo.lock → `hausKI-audio_merge_2510262238__root.md`
+- Cargo.toml → `hausKI-audio_merge_2510262238__root.md`
+- Justfile → `hausKI-audio_merge_2510262238__root.md`
+- README.md → `hausKI-audio_merge_2510262238__root.md`
+- pyproject.toml → `hausKI-audio_merge_2510262238__root.md`
+- tests/__init__.py → `hausKI-audio_merge_2510262238__tests.md`
+- tests/test_audio_mode.py → `hausKI-audio_merge_2510262238__tests.md`
+- tests/test_rec_scripts.py → `hausKI-audio_merge_2510262238__tests.md`
+- docs/ARCHITECTURE.md → `hausKI-audio_merge_2510262238__docs.md`
+- docs/README_ALSA.md → `hausKI-audio_merge_2510262238__docs.md`
+- docs/io-contracts.md → `hausKI-audio_merge_2510262238__docs.md`
+- docs/troubleshooting.md → `hausKI-audio_merge_2510262238__docs.md`
+- docs/vibe-detection.md → `hausKI-audio_merge_2510262238__docs.md`
+- docs/adr/0001-player-backend-mopidy-qobuz.md → `hausKI-audio_merge_2510262238__docs_adr.md`
+- docs/adr/0002-audio-path-pulse-vs-alsa.md → `hausKI-audio_merge_2510262238__docs_adr.md`
+- docs/adr/0003-repo-standards-docs-ci.md → `hausKI-audio_merge_2510262238__docs_adr.md`
+- docs/adr/0004-recording-pw-record-helper.md → `hausKI-audio_merge_2510262238__docs_adr.md`
+- docs/adr/README.md → `hausKI-audio_merge_2510262238__docs_adr.md`
+- docs/process/CONTRIBUTING.md → `hausKI-audio_merge_2510262238__docs_process.md`
+- docs/runbooks/backend_service.md → `hausKI-audio_merge_2510262238__docs_runbooks.md`
+- docs/runbooks/mopidy_iris_qobuz.md → `hausKI-audio_merge_2510262238__docs_runbooks.md`
+- docs/policies/SECURITY.md → `hausKI-audio_merge_2510262238__docs_policies.md`
+- tools/systemd/hauski-backend.service → `hausKI-audio_merge_2510262238__tools_systemd.md`
+- .github/workflows/docs-ci.yml → `hausKI-audio_merge_2510262238__.github_workflows.md`
+- .github/workflows/rust-ci.yml → `hausKI-audio_merge_2510262238__.github_workflows.md`
+- .github/workflows/validate-audio-events.yml → `hausKI-audio_merge_2510262238__.github_workflows.md`
+- .github/workflows/wgx-guard.yml → `hausKI-audio_merge_2510262238__.github_workflows.md`
+- .wgx/profile.yml → `hausKI-audio_merge_2510262238__.wgx.md`
+- merges/hausKI-audio_merge_2510262237__.github_workflows.md → `hausKI-audio_merge_2510262238__merges.md`
+- merges/hausKI-audio_merge_2510262237__.wgx.md → `hausKI-audio_merge_2510262238__merges.md`
+- merges/hausKI-audio_merge_2510262237__crates_backend.md → `hausKI-audio_merge_2510262238__merges.md`
+- merges/hausKI-audio_merge_2510262237__crates_backend_src.md → `hausKI-audio_merge_2510262238__merges.md`
+- merges/hausKI-audio_merge_2510262237__crates_backend_tests.md → `hausKI-audio_merge_2510262238__merges.md`
+- merges/hausKI-audio_merge_2510262237__docs.md → `hausKI-audio_merge_2510262238__merges.md`
+- merges/hausKI-audio_merge_2510262237__docs_adr.md → `hausKI-audio_merge_2510262238__merges.md`
+- merges/hausKI-audio_merge_2510262237__docs_policies.md → `hausKI-audio_merge_2510262238__merges.md`
+- merges/hausKI-audio_merge_2510262237__docs_process.md → `hausKI-audio_merge_2510262238__merges.md`
+- merges/hausKI-audio_merge_2510262237__docs_runbooks.md → `hausKI-audio_merge_2510262238__merges.md`
+- merges/hausKI-audio_merge_2510262237__index.md → `hausKI-audio_merge_2510262238__merges.md`
+- merges/hausKI-audio_merge_2510262237__part001.md → `hausKI-audio_merge_2510262238__merges.md`
+- merges/hausKI-audio_merge_2510262237__root.md → `hausKI-audio_merge_2510262238__merges.md`
+- merges/hausKI-audio_merge_2510262237__scripts.md → `hausKI-audio_merge_2510262238__merges.md`
+- merges/hausKI-audio_merge_2510262237__tests.md → `hausKI-audio_merge_2510262238__merges.md`
+- merges/hausKI-audio_merge_2510262237__tools_systemd.md → `hausKI-audio_merge_2510262238__merges.md`
+- crates/backend/Cargo.toml → `hausKI-audio_merge_2510262238__crates_backend.md`
+- crates/backend/tests/http.rs → `hausKI-audio_merge_2510262238__crates_backend_tests.md`
+- crates/backend/src/config.rs → `hausKI-audio_merge_2510262238__crates_backend_src.md`
+- crates/backend/src/discover.rs → `hausKI-audio_merge_2510262238__crates_backend_src.md`
+- crates/backend/src/error.rs → `hausKI-audio_merge_2510262238__crates_backend_src.md`
+- crates/backend/src/handlers.rs → `hausKI-audio_merge_2510262238__crates_backend_src.md`
+- crates/backend/src/lib.rs → `hausKI-audio_merge_2510262238__crates_backend_src.md`
+- crates/backend/src/main.rs → `hausKI-audio_merge_2510262238__crates_backend_src.md`
+- crates/backend/src/models.rs → `hausKI-audio_merge_2510262238__crates_backend_src.md`
+- crates/backend/src/mopidy.rs → `hausKI-audio_merge_2510262238__crates_backend_src.md`
+- crates/backend/src/scripts.rs → `hausKI-audio_merge_2510262238__crates_backend_src.md`
+- scripts/README.md → `hausKI-audio_merge_2510262238__scripts.md`
+- scripts/audio-mode → `hausKI-audio_merge_2510262238__scripts.md`
+- scripts/playlist-from-list → `hausKI-audio_merge_2510262238__scripts.md`
+- scripts/rec-start → `hausKI-audio_merge_2510262238__scripts.md`
+- scripts/rec-stop → `hausKI-audio_merge_2510262238__scripts.md`
