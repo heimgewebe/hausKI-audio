@@ -98,4 +98,3 @@ pub struct SimilarResponse {
     pub query: String,
     pub tracks: Vec<SimilarTrack>,
 }
-
