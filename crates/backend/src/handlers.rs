@@ -10,7 +10,7 @@ use crate::models::{
     CommandResponse, HealthResponse, ModeGetResponse, ModeSetRequest, MopidyHealth,
     PlaylistRequest, PlaylistResponse, SimilarQuery, SimilarResponse,
 };
-use crate::{discover, scripts, AppState};
+use crate::{discover, scripts, validation, AppState};
 
 pub fn app_routes(state: AppState) -> Router {
     Router::new()
@@ -130,8 +130,8 @@ pub async fn discover_similar(
     State(state): State<AppState>,
     Query(params): Query<SimilarQuery>,
 ) -> Result<Json<SimilarResponse>, AppError> {
-    if params.seed.trim().is_empty() {
-        return Err(AppError::bad_request("seed must not be empty"));
+    if !validation::is_allowed_uri(&params.seed) {
+        return Err(AppError::bad_request("disallowed URI scheme"));
     }
     let response = discover::similar_tracks(&*state.mopidy, &params.seed, params.limit).await?;
 

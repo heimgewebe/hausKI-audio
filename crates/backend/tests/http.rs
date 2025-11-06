@@ -360,6 +360,32 @@ async fn discover_similar_returns_tracks() {
     );
 }
 
+#[tokio::test]
+async fn discover_similar_rejects_bad_schemes() {
+    let dir = TempDir::new().unwrap();
+    let audio_script = "#!/usr/bin/env bash\nset -euo pipefail\nif [[ \"$1\" == \"show\" ]]; then\n  echo \"pulsesink\"\nelse\n  echo \"mode:$1\"\nfi\n";
+    write_script(&dir, "audio-mode", audio_script);
+    let playlist_script = "#!/usr/bin/env bash\nset -euo pipefail\necho \"playlist:$1\"\ncat -\n";
+    write_script(&dir, "playlist-from-list", playlist_script);
+    write_script(&dir, "rec-start", "");
+    write_script(&dir, "rec-stop", "");
+
+    let app = hauski_backend::build_router(test_config(&dir));
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("GET")
+                .uri("/discover/similar?seed=file:///etc/passwd")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+}
+
 lazy_static::lazy_static! {
     static ref SHARED: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
 }
