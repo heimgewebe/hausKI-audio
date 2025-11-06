@@ -386,7 +386,6 @@ async fn discover_similar_rejects_bad_schemes() {
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 }
 
-
 lazy_static::lazy_static! {
     static ref SHARED: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
 }
