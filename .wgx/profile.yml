@@ -1,6 +1,6 @@
 # WGX Profil für hauski-audio – von CI-Guard ausgewertet
 profile: hauski-audio
-description: "WGX profile for the heimgewebe/hauski-audio repository; validated in CI."
+description: "Local audio orchestration layer for HausKI"
 wgx-version: ">=2.0.0"
 
 # Genutzte Sprachen im Repo

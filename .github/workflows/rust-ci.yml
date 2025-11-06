@@ -19,10 +19,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           components: clippy, rustfmt
+          override: true
+          profile: minimal
       - name: Cargo fmt
         run: cargo fmt --all -- --check
       - name: Cargo clippy
