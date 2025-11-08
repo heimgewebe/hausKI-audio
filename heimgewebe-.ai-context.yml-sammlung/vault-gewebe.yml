@@ -9,9 +9,10 @@ project:
 
 dependencies:
   internal:
-    - name: semantah
+    - name: metarepo
       relationship: provides
       interface: document_exports | embeddings_source
+    # Note: semantah consumes knowledge_exports from metarepo, not directly from vault-gewebe
     - name: leitstand
       relationship: uses
       interface: ingest_events (knowledge updates)
