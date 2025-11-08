@@ -1,8 +1,9 @@
+---
 ai_context_version: 1.0
 
 project:
   name: vault-gewebe
-  summary: Unified personal and shared Obsidian vault for structured knowledge, notes, and educational materials.
+  summary: Unified personal and shared Obsidian vault for structured knowledge and notes.
   role: knowledge_vault
   primary_language: markdown
   visibility: internal
@@ -10,19 +11,23 @@ project:
 dependencies:
   internal:
     - name: semantah
-      relationship: provides
-      interface: document_exports | embeddings_source
+      relationship: uses
+      interface:
+        - semantic_linking
+        - search_integration
     - name: leitstand
       relationship: uses
-      interface: ingest_events (knowledge updates)
-    - name: hauski
+      interface:
+        - ingest_events
+    - name: contracts
       relationship: uses
-      interface: ui_sync | note_links
+      interface:
+        - knowledge_graph_schemas
   external:
     - name: obsidian
       note: local editor platform
     - name: pandoc
-      note: for export to other formats (pdf/docx/rtf)
+      note: exports to other formats
 
 architecture:
   entrypoints:
@@ -38,12 +43,12 @@ architecture:
   data_flow:
     input: notes, interviews, transcripts, project docs
     processing: tagging → linking → export
-    output: semantic index for semantah and synced UI state for hauski
+    output: semantic index and sync signals
 
 conventions:
   branching: "main, feature/*"
   commit_prefix: "vault-gewebe"
-  ci_platform: "github_actions"
+  ci_platform: github_actions
 
 documentation:
   adr: docs/adr/
@@ -51,9 +56,8 @@ documentation:
 
 ai_guidance:
   do:
-    - preserve structure of vault folders; keep filenames human-readable
+    - preserve structure of vault folders; filenames human-readable
     - prefer markdown + frontmatter for metadata
-    - when exporting, validate frontmatter fields against contracts repo
+    - validate frontmatter fields against contracts where applicable
   dont:
-    - insert generated text directly into primary vault without review
-    - modify Obsidian config files automatically
+    - auto-modify Obsidian config files
