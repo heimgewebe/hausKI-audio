@@ -13,7 +13,7 @@ dependencies:
       relationship: uses
       interface: jsonl_line_schema
     - name: leitstand
-      relationship: provides
+      relationship: uses
       interface: optional_event_feed
   external:
     - name: jq
