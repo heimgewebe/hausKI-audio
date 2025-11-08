@@ -13,8 +13,8 @@ dependencies:
       relationship: uses
       interface: audio.events_schema
     - name: leitstand
-      relationship: provides
-      interface: audio_events
+      relationship: uses
+      interface: event_ingest
   external:
     - name: ffmpeg
     - name: whisper.cpp
