@@ -10,7 +10,7 @@ use crate::models::{
     CommandResponse, HealthResponse, ModeGetResponse, ModeSetRequest, MopidyHealth,
     PlaylistRequest, PlaylistResponse, SimilarQuery, SimilarResponse,
 };
-use crate::{discover, scripts, AppState};
+use crate::{discover, scripts, validation, AppState};
 
 pub fn app_routes(state: AppState) -> Router {
     Router::new()
@@ -25,28 +25,30 @@ pub fn app_routes(state: AppState) -> Router {
 
 #[instrument(skip(state))]
 pub async fn health(State(state): State<AppState>) -> Result<Json<HealthResponse>, AppError> {
-    let mut overall = "ok";
-    let mopidy_status = if state.config.check_mopidy_health {
+    let (overall_status, mopidy_status) = if state.config.check_mopidy_health {
         match state.mopidy.health_check().await {
-            Ok(_) => Some(MopidyHealth {
-                status: "ok",
-                detail: None,
-            }),
-            Err(err) => {
-                overall = "degraded";
+            Ok(_) => (
+                "ok",
                 Some(MopidyHealth {
-                    status: "error",
+                    status: "ok".to_string(),
+                    detail: None,
+                }),
+            ),
+            Err(err) => (
+                "degraded",
+                Some(MopidyHealth {
+                    status: "error".to_string(),
                     detail: Some(err),
-                })
-            }
+                }),
+            ),
         }
     } else {
-        None
+        ("ok", None)
     };
 
     Ok(Json(HealthResponse {
-        status: overall,
-        version: env!("CARGO_PKG_VERSION"),
+        status: overall_status.to_string(),
+        version: Some(env!("CARGO_PKG_VERSION").to_string()),
         mopidy: mopidy_status,
     }))
 }
@@ -60,10 +62,14 @@ pub async fn proxy_rpc(
     Ok(Json(response))
 }
 
-
 #[instrument(skip(state))]
 pub async fn get_mode(State(state): State<AppState>) -> Result<Json<ModeGetResponse>, AppError> {
-    let script_path = state.config.audio_mode_script.program.to_str().unwrap_or_default();
+    let script_path = state
+        .config
+        .audio_mode_script
+        .program
+        .to_str()
+        .unwrap_or_default();
     let output = scripts::runner::run_script(&state.config, script_path, &["show"], None).await?;
     let trimmed = output.trim().to_string();
     let inferred = crate::models::AudioMode::infer(&trimmed);
@@ -79,8 +85,15 @@ pub async fn set_mode(
     State(state): State<AppState>,
     Json(body): Json<ModeSetRequest>,
 ) -> Result<Json<CommandResponse>, AppError> {
-    let script_path = state.config.audio_mode_script.program.to_str().unwrap_or_default();
-    let output = scripts::runner::run_script(&state.config, script_path, &[body.mode.as_str()], None).await?;
+    let script_path = state
+        .config
+        .audio_mode_script
+        .program
+        .to_str()
+        .unwrap_or_default();
+    let output =
+        scripts::runner::run_script(&state.config, script_path, &[body.mode.as_str()], None)
+            .await?;
     Ok(Json(CommandResponse {
         stdout: output.trim().to_string(),
         stderr: "".to_string(),
@@ -92,26 +105,35 @@ pub async fn playlist_from_list(
     State(state): State<AppState>,
     Json(body): Json<PlaylistRequest>,
 ) -> Result<Json<PlaylistResponse>, AppError> {
-    let script_path = state.config.playlist_script.program.to_str().unwrap_or_default();
+    let script_path = state
+        .config
+        .playlist_script
+        .program
+        .to_str()
+        .unwrap_or_default();
     let uris = body.uris.join("\n");
-    let output = scripts::runner::run_script(&state.config, script_path, &[&body.name, "--input", "-"], Some(&uris)).await?;
+    let output = scripts::runner::run_script(
+        &state.config,
+        script_path,
+        &[&body.name, "--input", "-"],
+        Some(&uris),
+    )
+    .await?;
     Ok(Json(PlaylistResponse {
         stdout: output.trim().to_string(),
         stderr: "".to_string(),
     }))
 }
 
-
 #[instrument(skip(state, params))]
 pub async fn discover_similar(
     State(state): State<AppState>,
     Query(params): Query<SimilarQuery>,
 ) -> Result<Json<SimilarResponse>, AppError> {
-    if params.seed.trim().is_empty() {
-        return Err(AppError::bad_request("seed must not be empty"));
+    if !validation::is_allowed_uri(&params.seed) {
+        return Err(AppError::bad_request("disallowed URI scheme"));
     }
-    let response =
-        discover::similar_tracks(&*state.mopidy, &params.seed, params.limit).await?;
+    let response = discover::similar_tracks(&*state.mopidy, &params.seed, params.limit).await?;
 
     Ok(Json(response))
 }

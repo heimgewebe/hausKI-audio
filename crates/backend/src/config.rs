@@ -1,12 +1,12 @@
+use crate::scripts::constants::{
+    DEFAULT_AUDIO_MODE_CMD, DEFAULT_PLAYLIST_CMD, DEFAULT_REC_START_CMD, DEFAULT_REC_STOP_CMD,
+};
 use std::env;
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 use thiserror::Error;
 use url::Url;
-use crate::scripts::constants::{
-    DEFAULT_AUDIO_MODE_CMD, DEFAULT_PLAYLIST_CMD, DEFAULT_REC_START_CMD, DEFAULT_REC_STOP_CMD,
-};
 
 // ... (rest of the file is the same)
 
@@ -51,7 +51,8 @@ pub enum ConfigError {
 impl AppConfig {
     const DEFAULT_BIND: &'static str = "127.0.0.1:8080";
     const DEFAULT_MOPIDY_RPC: &'static str = "http://127.0.0.1:6680/mopidy/rpc";
-    const DEFAULT_TIMEOUT_SECS: u64 = 10;
+    /// Standard-Timeout in Millisekunden (klar benannt, keine versteckte Umrechnung)
+    const DEFAULT_COMMAND_TIMEOUT_MS: u64 = 10_000;
 
     pub fn from_env() -> Result<Self, ConfigError> {
         let bind_raw = env::var("HAUSKI_BACKEND_BIND")
@@ -97,10 +98,10 @@ impl AppConfig {
             ),
         };
 
-        let timeout_ms: u64 = env::var("HAUSKI_COMMAND_TIMEOUT_MS")
+        let timeout_ms = std::env::var("HAUSKI_COMMAND_TIMEOUT_MS")
             .ok()
             .and_then(|raw| raw.parse().ok())
-            .unwrap_or(Self::DEFAULT_TIMEOUT_SECS * 1000);
+            .unwrap_or(Self::DEFAULT_COMMAND_TIMEOUT_MS);
 
         let check_mopidy_health = env_bool("HAUSKI_CHECK_MOPIDY_HEALTH", true);
 

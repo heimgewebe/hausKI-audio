@@ -1,18 +1,23 @@
+---
 # WGX Profil für hauski-audio – von CI-Guard ausgewertet
 profile: hauski-audio
-description: "WGX profile for the heimgewebe/hauski-audio repository; validated in CI."
-wgx-version: ">=2.0.0"
+description: "Local audio orchestration layer for HausKI"
+wgx-version: ">=0.3"
 
 # Genutzte Sprachen im Repo
-lang:
-  - rust
-  - python
-  - shell
+lang: python
 
 # Metadaten, die der Guard prüfen darf
 meta:
   org: heimgewebe
-  repo: hauski-audio
+  repo: alexdermohr/hauski-audio
+  maintainer: alexdermohr@gmail.com
+  tags:
+    - audio
+    - motu
+    - qobuz
+    - hauski
+    - wgx
   ci: true
 
 rust:
@@ -33,3 +38,5 @@ env:
   UV_SYSTEM_PYTHON: "1"
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
   RUSTFLAGS: "-C debuginfo=0"
+  PYTHONUNBUFFERED: "1"
+  UV_PIP_VERSION: "24.0"

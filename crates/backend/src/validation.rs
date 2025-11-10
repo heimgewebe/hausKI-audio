@@ -24,6 +24,6 @@ mod tests {
     fn rejects_empty_and_plain() {
         assert!(!is_allowed_uri(""));
         assert!(!is_allowed_uri("file:///tmp/x")); // nicht freigeschaltet
-        assert!(!is_allowed_uri("qobuz:"));       // nichts dahinter
+        assert!(!is_allowed_uri("qobuz:")); // nichts dahinter
     }
 }
