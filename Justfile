@@ -92,3 +92,6 @@ doctor:
     which npx || echo "❌ npx not found (for markdownlint)"
     python3 --version
     cargo --version || echo "ℹ️ no rust toolchain (optional)"
+default: lint
+    bash -n $(git ls-files *.sh *.bash)
+    echo "lint ok"
