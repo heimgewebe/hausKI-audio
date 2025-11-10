@@ -2,10 +2,13 @@
 # WGX Profil für hauski-audio – von CI-Guard ausgewertet
 profile: hauski-audio
 description: "Local audio orchestration layer for HausKI"
-wgx-version: ">=0.3"
+wgx-version: ">=2.0.0"
 
 # Genutzte Sprachen im Repo
-lang: python
+lang:
+  - rust
+  - python
+  - shell
 
 # Metadaten, die der Guard prüfen darf
 meta:
