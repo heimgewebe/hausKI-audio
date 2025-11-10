@@ -67,10 +67,11 @@ pub async fn get_mode(State(state): State<AppState>) -> Result<Json<ModeGetRespo
     let script_path = state
         .config
         .audio_mode_script
-        .program
+        .resolve_with(&state.config.script_workdir)
         .to_str()
-        .unwrap_or_default();
-    let output = scripts::runner::run_script(&state.config, script_path, &["show"], None).await?;
+        .unwrap_or_default()
+        .to_string();
+    let output = scripts::runner::run_script(&state.config, &script_path, &["show"], None).await?;
     let trimmed = output.trim().to_string();
     let inferred = crate::models::AudioMode::infer(&trimmed);
 
@@ -88,11 +89,12 @@ pub async fn set_mode(
     let script_path = state
         .config
         .audio_mode_script
-        .program
+        .resolve_with(&state.config.script_workdir)
         .to_str()
-        .unwrap_or_default();
+        .unwrap_or_default()
+        .to_string();
     let output =
-        scripts::runner::run_script(&state.config, script_path, &[body.mode.as_str()], None)
+        scripts::runner::run_script(&state.config, &script_path, &[body.mode.as_str()], None)
             .await?;
     Ok(Json(CommandResponse {
         stdout: output.trim().to_string(),
@@ -108,13 +110,14 @@ pub async fn playlist_from_list(
     let script_path = state
         .config
         .playlist_script
-        .program
+        .resolve_with(&state.config.script_workdir)
         .to_str()
-        .unwrap_or_default();
+        .unwrap_or_default()
+        .to_string();
     let uris = body.uris.join("\n");
     let output = scripts::runner::run_script(
         &state.config,
-        script_path,
+        &script_path,
         &[&body.name, "--input", "-"],
         Some(&uris),
     )
