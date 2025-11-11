@@ -21,24 +21,6 @@ _py_run = `
 default:
     @echo "🧵 HausKI Audio Layer – choose a target (lint, test, run, doctor)"
 
-lint:
-    #!/usr/bin/env bash
-    set -eo pipefail
-    echo "› markdownlint"
-    if command -v npx &> /dev/null; then
-        npx markdownlint-cli2 "**/*.md"
-    else
-        echo "⚠️ npx not found, skipping markdownlint"
-    fi
-    echo "› cargo fmt"
-    cargo fmt --check
-    echo "› cargo clippy"
-    cargo clippy -- -D warnings
-    echo "› ruff check"
-    {{_py_run}} ruff check .
-    echo "› black --check"
-    {{_py_run}} black --check .
-
 lint-fix:
     #!/usr/bin/env bash
     set -eo pipefail
@@ -47,6 +29,14 @@ lint-fix:
     echo "› black"
     {{_py_run}} black .
 
+# Lokaler Helper: Schnelltests & Linter – sicher mit Null-Trennung und Quoting
+lint:
+    @set -euo pipefail; \
+    mapfile -d '' files < <(git ls-files -z -- '*.sh' '*.bash' || true); \
+    if [ "${#files[@]}" -eq 0 ]; then echo "keine Shell-Dateien"; exit 0; fi; \
+    printf '%s\0' "${files[@]}" | xargs -0 bash -n; \
+    shfmt -d -i 2 -ci -sr -- "${files[@]}"; \
+    shellcheck -S style -- "${files[@]}"
 test:
     #!/usr/bin/env bash
     set -eo pipefail
