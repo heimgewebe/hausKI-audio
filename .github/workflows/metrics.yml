@@ -4,8 +4,8 @@ permissions:
   contents: read          # Repo lesen, um Skripte auszuführen
   actions: write          # notwendig für upload-artifact
   checks: write
-on:
-  workflow_dispatch:
+"on":
+  workflow_dispatch: {}
   schedule:
     - cron: "0 * * * *"
 
