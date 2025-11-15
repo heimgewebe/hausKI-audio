@@ -26,6 +26,14 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install wgx
+
       - name: Snapshot metrics
         run: bash scripts/wgx-metrics-snapshot.sh --json
       - name: Fetch AJV schema (local file)
