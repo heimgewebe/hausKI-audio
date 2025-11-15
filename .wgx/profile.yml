@@ -1,8 +1,62 @@
 ---
-class: rust-service
+# WGX Profil für hauski-audio
+profile: hauski-audio
+description: "Local audio orchestration layer"
+wgx-version: ">=2.0.0"
+
+class: rust-python-hybrid
+
+lang:
+  - rust
+  - python
+  - shell
+
+meta:
+  org: heimgewebe
+  repo: alexdermohr/hauski-audio
+  maintainer: alexdermohr@gmail.com
+  tags:
+    - audio
+    - motu
+    - qobuz
+    - hauski
+    - wgx
+  ci: true
+
+rust:
+  toolchain: "stable"
+
+python:
+  uv: true
+
+tool:
+  uv:
+    sync: true
+
+env:
+  UV_SYSTEM_PYTHON: "1"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  RFLAGS: "-C debuginfo=0"
+  PYTHONUNBUFFERED: "1"
+  UV_PIP_VERSION: "24.0"
 
 tasks:
-  smoke: "# TODO"
-  guard: "# TODO"
-  metrics: "# TODO"
-  snapshot: "# TODO"
+  smoke: |
+    cargo build --workspace
+    uv venv
+    uv pip install -r requirements.txt
+    python3 -c "import hauski_audio; print('import OK')"
+
+  guard: |
+    cargo fmt --all --check
+    cargo clippy --all-targets --all-features -- -D warnings
+    uv run ruff check .
+    uv run pytest --maxfail=1 --disable-warnings
+
+  metrics: |
+    cargo llvm-cov --workspace --lcov --output-path lcov.info
+    uv run pytest --cov=hauski_audio --cov-report=term-missing
+
+  snapshot: |
+    cargo test --workspace
+    uv run pytest
