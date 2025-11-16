@@ -1,16 +1,16 @@
 ---
-# WGX Profil für hauski-audio – von CI-Guard ausgewertet
+# WGX Profil für hauski-audio
 profile: hauski-audio
-description: "Local audio orchestration layer for HausKI"
-wgx-version: ">=2.0.0"
+description: "Local audio orchestration layer"
+wgx-version: ">=1.0.0"
 
-# Genutzte Sprachen im Repo
+class: rust-python-hybrid
+
 lang:
   - rust
   - python
   - shell
 
-# Metadaten, die der Guard prüfen darf
 meta:
   org: heimgewebe
   repo: alexdermohr/hauski-audio
@@ -24,22 +24,57 @@ meta:
   ci: true
 
 rust:
-  # CI/Local Toolchain
-  toolchain: "stable"
+  toolchain: stable
 
 python:
-  # uv wird verwendet
   uv: true
 
 tool:
   uv:
-    # Guard erwartet sync=true (spiegelt pyproject.toml)
     sync: true
 
-# Explizite Umgebungsvariablen, die der Guard erwartet/prüft
 env:
   UV_SYSTEM_PYTHON: "1"
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
   RUSTFLAGS: "-C debuginfo=0"
   PYTHONUNBUFFERED: "1"
   UV_PIP_VERSION: "24.0"
+
+tasks:
+  smoke: |
+    echo "[wgx.smoke] hauski-audio – schneller Grundcheck"
+    cargo build --workspace --quiet
+    if command -v uv >/dev/null 2>&1 && [ -f pyproject.toml ]; then
+      uv run python -c "print('python smoke ok')" || true
+    fi
+
+  guard: |
+    echo "[wgx.guard] Rust & Python prüfen…"
+    cargo fmt --all --check
+    cargo clippy --all-targets --all-features -- -D warnings
+    if command -v uv >/dev/null 2>&1 && [ -f pyproject.toml ]; then
+      uv sync --frozen || uv sync
+      uv run ruff check .
+      uv run pytest --maxfail=1 --disable-warnings
+    else
+      echo "[wgx.guard] uv/pyproject nicht vorhanden – Python-Checks übersprungen."
+    fi
+
+  metrics: |
+    echo "[wgx.metrics] einfache Coverage-Metrik (best effort)…"
+    if command -v cargo-llvm-cov >/dev/null 2>&1; then
+      cargo llvm-cov --workspace --lcov --output-path lcov.info || true
+    else
+      echo "cargo-llvm-cov nicht installiert – skip."
+    fi
+    if command -v uv >/dev/null 2>&1 && [ -f pyproject.toml ]; then
+      # Annahme: Das Python-Paket für Coverage-Analyse heißt 'hauski_audio'
+      uv run pytest --cov=hauski_audio --cov-report=term-missing || true
+    fi
+
+  snapshot: |
+    echo "[wgx.snapshot] Build + Tests (best effort)…"
+    cargo test --workspace || true
+    if command -v uv >/dev/null 2>&1 && [ -f pyproject.toml ]; then
+      uv run pytest || true
+    fi
