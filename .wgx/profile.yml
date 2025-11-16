@@ -2,7 +2,7 @@
 # WGX Profil für hauski-audio
 profile: hauski-audio
 description: "Local audio orchestration layer"
-wgx-version: ">=2.0.0"
+wgx-version: ">=1.0.0"
 
 class: rust-python-hybrid
 
@@ -68,6 +68,7 @@ tasks:
       echo "cargo-llvm-cov nicht installiert – skip."
     fi
     if command -v uv >/dev/null 2>&1 && [ -f pyproject.toml ]; then
+      # Annahme: Das Python-Paket für Coverage-Analyse heißt 'hauski_audio'
       uv run pytest --cov=hauski_audio --cov-report=term-missing || true
     fi
 
