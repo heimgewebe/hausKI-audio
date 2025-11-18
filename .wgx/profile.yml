@@ -1,7 +1,7 @@
 ---
 # WGX Profil für hauski-audio
 profile: hauski-audio
-description: "Local audio orchestration layer"
+description: "Local audio orchestration layer for HausKI"
 
 # Semantische Version des hauski-/WGX-Profils (nicht dasselbe wie wgx CLI-Version)
 wgx-version: ">=1.0.0"
@@ -52,13 +52,13 @@ env:
   UV_PIP_VERSION: "24.0"
 
 # Fleet-Konvention: Aufgaben, die von WGX und CI genutzt werden können.
-# Alle Tasks sind lokale Shell-Kommandos; keine rekursiven CI-Trigger.
+# Alle Tasks sind lokale Shell-Kommandos; keine rekursive CI-Trigger.
 tasks:
   smoke: |
     echo "[wgx.smoke] hauski-audio – schneller Grundcheck"
     cargo build --workspace --quiet
     if command -v uv >/dev/null 2>&1 && [ -f pyproject.toml ]; then
-      # Leichter Python-Sanity-Check; darf im Zweifel weich scheitern.
+      # Leichter Python-Sanity-Check; darf im Zweifel weich scheittern.
       uv run python -c "print('python smoke ok')" || true
     fi
 
