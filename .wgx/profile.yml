@@ -63,6 +63,7 @@ tasks:
     fi
 
   guard: |
+    set -euo pipefail
     echo "[wgx.guard] Rust & Python prüfen…"
 
     # Rust-Formatierung und Lints strikt behandeln
