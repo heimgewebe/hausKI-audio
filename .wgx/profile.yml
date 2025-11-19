@@ -1,8 +1,17 @@
 ---
-# WGX Profil für hauski-audio – von CI-Guard ausgewertet
+# WGX Profil für hauski-audio
 profile: hauski-audio
 description: "Local audio orchestration layer for HausKI"
-wgx-version: ">=2.0.0"
+
+# Semantische Version des hauski-/WGX-Profils (nicht dasselbe wie wgx CLI-Version)
+wgx-version: ">=1.0.0"
+
+# Fleet-Klasse dieses Repos – dient als Oberflächen-Typ für Tools
+class: rust-python-hybrid
+
+# WGX-spezifischer Block für künftige API-Versionierung der Profile
+wgx:
+  apiVersion: v1
 
 # Genutzte Sprachen im Repo
 lang:
@@ -10,10 +19,10 @@ lang:
   - python
   - shell
 
-# Metadaten, die der Guard prüfen darf
+# Metadaten, die Guard-/Fleet-Tools auswerten dürfen
 meta:
   org: heimgewebe
-  repo: alexdermohr/hauski-audio
+  repo: heimgewebe/hauski-audio
   maintainer: alexdermohr@gmail.com
   tags:
     - audio
@@ -24,22 +33,80 @@ meta:
   ci: true
 
 rust:
-  # CI/Local Toolchain
-  toolchain: "stable"
+  toolchain: stable
 
 python:
-  # uv wird verwendet
   uv: true
 
 tool:
   uv:
-    # Guard erwartet sync=true (spiegelt pyproject.toml)
+    # Guard erwartet, dass uv das Projekt aus pyproject.toml synchronisieren kann
     sync: true
 
-# Explizite Umgebungsvariablen, die der Guard erwartet/prüft
+# Explizite Umgebungsvariablen für Build-/Tool-Umgebung
 env:
   UV_SYSTEM_PYTHON: "1"
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
   RUSTFLAGS: "-C debuginfo=0"
   PYTHONUNBUFFERED: "1"
   UV_PIP_VERSION: "24.0"
+
+# Fleet-Konvention: Aufgaben, die von WGX und CI genutzt werden können.
+# Alle Tasks sind lokale Shell-Kommandos; keine rekursiven CI-Trigger.
+tasks:
+  smoke: |
+    echo "[wgx.smoke] hauski-audio – schneller Grundcheck"
+    cargo build --workspace --quiet
+    if command -v uv >/dev/null 2>&1 && [ -f pyproject.toml ]; then
+      # Leichter Python-Sanity-Check; darf im Zweifel weich scheitern.
+      uv run python -c "print('python smoke ok')" || true
+    fi
+
+  guard: |
+    set -euo pipefail
+    echo "[wgx.guard] Rust & Python prüfen…"
+
+    # Rust-Formatierung und Lints strikt behandeln
+    cargo fmt --all --check
+    cargo clippy --all-targets --all-features -- -D warnings
+
+    # Python-Checks nur, wenn uv + pyproject vorhanden sind
+    if command -v uv >/dev/null 2>&1 && [ -f pyproject.toml ]; then
+      # Bevorzugt frozen, fällt bei Bedarf auf normales sync zurück
+      uv sync --frozen || uv sync
+
+      uv run ruff check .
+      uv run pytest --maxfail=1 --disable-warnings
+    else
+      echo "[wgx.guard] uv oder pyproject.toml nicht vorhanden – Python-Checks übersprungen."
+    fi
+
+  metrics: |
+    echo "[wgx.metrics] Coverage-/Metriklauf (best effort)…"
+
+    # Rust-Coverage nur, wenn cargo-llvm-cov vorhanden ist
+    if command -v cargo-llvm-cov >/dev/null 2>&1; then
+      cargo llvm-cov --workspace --lcov --output-path lcov.info || true
+    else
+      echo "[wgx.metrics] cargo-llvm-cov nicht installiert – Rust-Coverage übersprungen."
+    fi
+
+    # Annahme: Das Python-Paket für Coverage-Analyse heißt 'hauski_audio'
+    if command -v uv >/dev/null 2>&1 && [ -f pyproject.toml ]; then
+      uv run pytest --cov=hauski_audio --cov-report=term-missing || true
+    else
+      echo "[wgx.metrics] uv oder pyproject.toml nicht vorhanden – Python-Coverage übersprungen."
+    fi
+
+  snapshot: |
+    echo "[wgx.snapshot] Build + Tests (best effort)…"
+
+    # Rust-Tests dürfen fehlschlagen, ohne den gesamten Snapshot abzubrechen
+    cargo test --workspace || true
+
+    # Python-Tests ebenfalls best effort
+    if command -v uv >/dev/null 2>&1 && [ -f pyproject.toml ]; then
+      uv run pytest || true
+    else
+      echo "[wgx.snapshot] uv oder pyproject.toml nicht vorhanden – Python-Tests übersprungen."
+    fi
