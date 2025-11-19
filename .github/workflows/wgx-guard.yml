@@ -97,13 +97,19 @@ jobs:
           assert data.get('description') == (
               'Local audio orchestration layer for HausKI'
           ), "description mismatch"
-          assert data.get('lang') == 'python', "lang must be 'python'"
-          assert data.get('wgx-version') == '>=0.3', (
-              "wgx-version must be '>=0.3'"
+          assert data.get('wgx-version') == '>=1.0.0', (
+              "wgx-version must be '>=1.0.0'"
           )
+          assert data.get('class') == 'rust-python-hybrid', (
+              "class must be 'rust-python-hybrid'"
+          )
+          assert data.get('wgx', {}).get('apiVersion') == 'v1', (
+              "wgx.apiVersion must be v1"
+          )
+          assert data.get('lang') == ['rust', 'python', 'shell'], "lang mismatch"
 
           meta = data.get('meta') or {}
-          assert meta.get('repo') == 'alexdermohr/hauski-audio', (
+          assert meta.get('repo') == 'heimgewebe/hauski-audio', (
               "meta.repo mismatch"
           )
           assert meta.get('maintainer') == 'alexdermohr@gmail.com', (
