@@ -2,32 +2,32 @@ set shell := ["bash", "-cu"]
 
 # Helper function to run Python commands using uv if available,
 # otherwise falling back to a local virtual environment.
-_py_run = `
-    #!/usr/bin/env bash
-    set -eo pipefail
-    if command -v uv &> /dev/null; then
-        uv run "$@"
-    else
-        if [ ! -d ".venv" ]; then
-            echo "› creating venv"
-            python3 -m venv .venv
-            echo "› installing dev dependencies"
-            .venv/bin/pip install -e ".[dev]"
-        fi
-        .venv/bin/"$@"
-    fi
-`
+_py_run := if `command -v uv >/dev/null 2>&1 && echo yes || echo no` == "yes" { "uv run " } else { ".venv/bin/" }
 
 default:
     @echo "🧵 HausKI Audio Layer – choose a target (lint, test, run, doctor)"
 
-lint-fix:
+# Ensure venv exists when not using uv
+_ensure_venv:
+    #!/usr/bin/env bash
+    set -eo pipefail
+    if command -v uv &> /dev/null; then
+        exit 0
+    fi
+    if [ ! -d ".venv" ]; then
+        echo "› creating venv"
+        python3 -m venv .venv
+        echo "› installing dev dependencies"
+        .venv/bin/pip install -e ".[dev]"
+    fi
+
+lint-fix: _ensure_venv
     #!/usr/bin/env bash
     set -eo pipefail
     echo "› ruff --fix"
-    {{_py_run}} ruff check . --fix
+    {{_py_run}}ruff check . --fix
     echo "› black"
-    {{_py_run}} black .
+    {{_py_run}}black .
 
 # Lokaler Helper: Schnelltests & Linter – sicher mit Null-Trennung und Quoting
 lint:
@@ -37,14 +37,14 @@ lint:
     printf '%s\0' "${files[@]}" | xargs -0 bash -n; \
     shfmt -d -i 2 -ci -sr -- "${files[@]}"; \
     shellcheck -S style -- "${files[@]}"
-test:
+test: _ensure_venv
     #!/usr/bin/env bash
     set -eo pipefail
     echo "› cargo test"
     cargo test --workspace
     echo "› pytest"
     # Run pytest; exit code 5 means "no tests collected", which we ignore.
-    {{_py_run}} pytest -q || {
+    {{_py_run}}pytest -q || {
         exit_code=$?
         if [ $exit_code -eq 5 ]; then
             echo "ℹ️ no python tests found"
@@ -82,6 +82,3 @@ doctor:
     which npx || echo "❌ npx not found (for markdownlint)"
     python3 --version
     cargo --version || echo "ℹ️ no rust toolchain (optional)"
-default: lint
-    bash -n $(git ls-files *.sh *.bash)
-    echo "lint ok"
