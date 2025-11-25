@@ -30,13 +30,17 @@ lint-fix: _ensure_venv
     {{_py_run}} black .
 
 # Lokaler Helper: Schnelltests & Linter – sicher mit Null-Trennung und Quoting
-lint:
+lint-shell:
     @set -euo pipefail; \
     mapfile -d '' files < <(git ls-files -z -- '*.sh' '*.bash' || true); \
     if [ "${#files[@]}" -eq 0 ]; then echo "keine Shell-Dateien"; exit 0; fi; \
     printf '%s\0' "${files[@]}" | xargs -0 bash -n; \
     shfmt -d -i 2 -ci -sr -- "${files[@]}"; \
     shellcheck -S style -- "${files[@]}"
+
+lint:
+    uv run ruff check .
+    uv run black --check .
 test: _ensure_venv
     #!/usr/bin/env bash
     set -eo pipefail
