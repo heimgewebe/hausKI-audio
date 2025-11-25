@@ -38,9 +38,9 @@ lint-shell:
     shfmt -d -i 2 -ci -sr -- "${files[@]}"; \
     shellcheck -S style -- "${files[@]}"
 
-lint:
-    uv run ruff check .
-    uv run black --check .
+lint: _ensure_venv
+    {{_py_run}} ruff check .
+    {{_py_run}} black --check .
 test: _ensure_venv
     #!/usr/bin/env bash
     set -eo pipefail
