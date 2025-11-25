@@ -44,7 +44,7 @@ test: _ensure_venv
     cargo test --workspace
     echo "› pytest"
     # Run pytest; exit code 5 means "no tests collected", which we ignore.
-    {{_py_run}}pytest -q || {
+    {{_py_run}} pytest -q || {
         exit_code=$?
         if [ $exit_code -eq 5 ]; then
             echo "ℹ️ no python tests found"
