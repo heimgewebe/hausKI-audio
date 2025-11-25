@@ -27,7 +27,7 @@ lint-fix: _ensure_venv
     echo "› ruff --fix"
     {{_py_run}}ruff check . --fix
     echo "› black"
-    {{_py_run}}black .
+    {{_py_run}} black .
 
 # Lokaler Helper: Schnelltests & Linter – sicher mit Null-Trennung und Quoting
 lint:
