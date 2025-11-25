@@ -25,7 +25,7 @@ lint-fix: _ensure_venv
     #!/usr/bin/env bash
     set -eo pipefail
     echo "› ruff --fix"
-    {{_py_run}}ruff check . --fix
+    {{_py_run}} ruff check . --fix
     echo "› black"
     {{_py_run}} black .
 
