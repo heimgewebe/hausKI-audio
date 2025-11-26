@@ -23,19 +23,19 @@ pub async fn similar_tracks(
     let query = build_query(&seed_track_value)
         .ok_or_else(|| AppError::internal("unable to derive search query from seed track"))?;
 
-    let search_results = mopidy.search_any(&query).await?;
-    let mut seen: HashSet<String> = HashSet::new();
-    seen.insert(seed_track.uri.clone());
-    let mut collected: Vec<SimilarTrack> = Vec::new();
-
     let target_limit = limit.unwrap_or(10);
     if target_limit == 0 {
         return Ok(SimilarResponse {
             seed: seed_track,
             query,
-            tracks: collected,
+            tracks: Vec::new(),
         });
     }
+
+    let search_results = mopidy.search_any(&query).await?;
+    let mut seen: HashSet<String> = HashSet::new();
+    seen.insert(seed_track.uri.clone());
+    let mut collected: Vec<SimilarTrack> = Vec::new();
 
     for backend in search_results {
         if let Some(tracks) = backend.get("tracks").and_then(Value::as_array) {
@@ -178,8 +178,12 @@ mod tests {
 
         assert!(response.tracks.is_empty());
         assert_eq!(response.query, "Artist Seed");
+        // With limit=0, search_any should NOT be called (performance optimization)
         let recorded = mopidy.queries.lock().unwrap().clone();
-        assert_eq!(recorded, vec!["Artist Seed".to_string()]);
+        assert!(
+            recorded.is_empty(),
+            "search_any should not be called when limit is 0"
+        );
     }
 
     #[tokio::test]
