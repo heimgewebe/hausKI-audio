@@ -13,17 +13,21 @@ permissions:
   workflow_dispatch:
 
 jobs:
-  validate-jsonl:
-    name: "audio.events.jsonl schema check"
+  validate-export-events:
+    name: "Validate export/audio.events.jsonl"
     uses: heimgewebe/metarepo/.github/workflows/reusable-validate-jsonl.yml@contracts-v1
-    strategy:
-      fail-fast: false
-      matrix:
-        file:
-          - export/audio.events.jsonl
-          - fixtures/audio/events.jsonl
     with:
-      jsonl_path: ${{ matrix.file }}
+      jsonl_path: export/audio.events.jsonl
+      schema_url: >-
+        https://raw.githubusercontent.com/heimgewebe/metarepo/contracts-v1/contracts/audio.events.schema.json
+      strict: false
+      validate_formats: true
+
+  validate-fixtures-events:
+    name: "Validate fixtures/audio/events.jsonl"
+    uses: heimgewebe/metarepo/.github/workflows/reusable-validate-jsonl.yml@contracts-v1
+    with:
+      jsonl_path: fixtures/audio/events.jsonl
       schema_url: >-
         https://raw.githubusercontent.com/heimgewebe/metarepo/contracts-v1/contracts/audio.events.schema.json
       strict: false
