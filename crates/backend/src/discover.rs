@@ -180,7 +180,10 @@ mod tests {
         assert_eq!(response.query, "Artist Seed");
         // With limit=0, search_any should NOT be called (performance optimization)
         let recorded = mopidy.queries.lock().unwrap().clone();
-        assert!(recorded.is_empty(), "search_any should not be called when limit is 0");
+        assert!(
+            recorded.is_empty(),
+            "search_any should not be called when limit is 0"
+        );
     }
 
     #[tokio::test]
