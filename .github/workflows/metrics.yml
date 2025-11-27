@@ -1,9 +1,13 @@
 ---
 name: "📊 Metrics Snapshot & Validation"
 permissions:
-  contents: read          # Repo lesen, um Skripte auszuführen
-  actions: write          # notwendig für upload-artifact
-  checks: write
+  contents: read
+  actions: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 "on":
   workflow_dispatch:
   schedule:
@@ -20,6 +24,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Ensure Node for ajv-cli
         uses: actions/setup-node@v4
