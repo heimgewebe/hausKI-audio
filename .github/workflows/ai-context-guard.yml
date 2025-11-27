@@ -2,6 +2,11 @@
 name: ai-context-guard
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 "on":
   pull_request:
     paths:
@@ -18,6 +23,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Ensure AI context exists and is non-empty
         run: |
           if [ ! -s .ai-context.yml ]; then
