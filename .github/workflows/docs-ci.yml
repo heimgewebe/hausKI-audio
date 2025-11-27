@@ -1,6 +1,9 @@
 ---
 name: Docs CI
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -16,8 +19,7 @@ concurrency:
       - "**/*.md"
       - "docs/**"
       - ".github/workflows/docs-ci.yml"
-permissions:
-  contents: read
+
 jobs:
   lint:
     runs-on: ubuntu-latest
