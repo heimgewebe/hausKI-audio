@@ -76,9 +76,9 @@ fn build_query(track: &Value) -> Option<String> {
         .and_then(|arr| arr.first())
         .and_then(|artist| artist.get("name"))
         .and_then(Value::as_str)
-        .map(|s| s.trim())
+        .map(str::trim)
         .filter(|value| !value.is_empty())
-        .map(|value| value.to_string());
+        .map(std::string::ToString::to_string);
 
     let query = if let Some(artist) = artists {
         format!("{artist} {name}")
@@ -103,14 +103,14 @@ fn build_track(track: &Value) -> Option<SimilarTrack> {
         .get("album")
         .and_then(|album| album.get("name"))
         .and_then(Value::as_str)
-        .map(|s| s.to_string());
+        .map(std::string::ToString::to_string);
     let artists = track
         .get("artists")
         .and_then(Value::as_array)
         .map(|arr| {
             arr.iter()
                 .filter_map(|artist| artist.get("name").and_then(Value::as_str))
-                .map(|name| name.to_string())
+                .map(std::string::ToString::to_string)
                 .collect::<Vec<_>>()
         })
         .unwrap_or_default();

@@ -29,6 +29,7 @@ pub struct ScriptConfig {
 }
 
 impl ScriptConfig {
+    #[must_use] 
     pub fn resolve_with(&self, base: &Path) -> PathBuf {
         if self.program.is_absolute() {
             self.program.clone()
@@ -173,14 +174,14 @@ fn resolve_mopidy_rpc_url() -> Result<Url, ConfigError> {
         if let Ok(mut url) = Url::parse(&base) {
             url.set_path("/mopidy/rpc");
             return Ok(url);
-        } else {
-            return Err(ConfigError::InvalidMopidyUrl(base));
         }
+        return Err(ConfigError::InvalidMopidyUrl(base));
     }
 
     Url::parse(AppConfig::DEFAULT_MOPIDY_RPC)
         .map_err(|_| ConfigError::InvalidMopidyUrl(AppConfig::DEFAULT_MOPIDY_RPC.to_string()))
 }
+#[must_use] 
 pub fn parse_bool(s: &str) -> Option<bool> {
     match s.trim().to_ascii_lowercase().as_str() {
         "true" | "1" | "yes" | "on" => Some(true),
@@ -188,6 +189,7 @@ pub fn parse_bool(s: &str) -> Option<bool> {
         _ => None,
     }
 }
+#[must_use] 
 pub fn env_bool(key: &str, default: bool) -> bool {
     env::var(key)
         .ok()
