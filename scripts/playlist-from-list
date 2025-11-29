@@ -6,6 +6,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Any
 from urllib import error, request
 
 DEFAULT_RPC_URL = "http://127.0.0.1:6680/mopidy/rpc"
@@ -16,7 +17,7 @@ class MopidyClient:
         self.rpc_url = rpc_url
         self._next_id = 1
 
-    def call(self, method: str, params: dict | None = None) -> object:
+    def call(self, method: str, params: dict[str, Any] | None = None) -> Any:
         payload = {
             "jsonrpc": "2.0",
             "id": self._next_id,
@@ -91,15 +92,15 @@ def load_uris(source: str) -> list[str]:
     return [line for line in lines if line and not line.startswith("#")]
 
 
-def find_existing(client: MopidyClient, name: str) -> dict | None:
-    playlists = client.call("core.playlists.as_list") or []
+def find_existing(client: MopidyClient, name: str) -> dict[str, Any] | None:
+    playlists: list[Any] = client.call("core.playlists.as_list") or []
     for playlist in playlists:
         if playlist.get("name") == name:
-            return playlist
+            return playlist  # type: ignore[no-any-return]
     return None
 
 
-def load_playlist(client: MopidyClient, uri: str) -> dict:
+def load_playlist(client: MopidyClient, uri: str) -> dict[str, Any]:
     playlist = client.call("core.playlists.lookup", {"uri": uri})
     if isinstance(playlist, dict):
         return playlist
@@ -108,7 +109,7 @@ def load_playlist(client: MopidyClient, uri: str) -> dict:
 
 def ensure_playlist(
     client: MopidyClient, *, name: str, scheme: str | None, replace: bool
-) -> dict:
+) -> dict[str, Any]:
     existing = find_existing(client, name)
     if existing and not replace:
         raise RuntimeError(
@@ -132,11 +133,11 @@ def ensure_playlist(
     return created
 
 
-def to_track(uri: str) -> dict:
+def to_track(uri: str) -> dict[str, str]:
     return {"__model__": "Track", "uri": uri}
 
 
-def save_playlist(client: MopidyClient, playlist: dict) -> dict:
+def save_playlist(client: MopidyClient, playlist: dict[str, Any]) -> Any:
     playlist.setdefault("__model__", "Playlist")
     return client.call("core.playlists.save", {"playlist": playlist})
 
