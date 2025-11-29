@@ -3,9 +3,10 @@ use std::sync::LazyLock;
 
 /// Erlaubte URI-Schemata: qobuz:, spotify:, local:
 /// Mindestens ein weiteres Zeichen hinter dem Schema verlangt.
-static URI_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(?i:(qobuz|spotify|local))[:/].+").unwrap());
+static URI_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^(?i:(qobuz|spotify|local))[:/].+").unwrap());
 
-#[must_use] 
+#[must_use]
 pub fn is_allowed_uri(uri: &str) -> bool {
     URI_RE.is_match(uri)
 }

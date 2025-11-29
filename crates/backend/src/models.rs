@@ -8,7 +8,7 @@ pub enum AudioMode {
 }
 
 impl AudioMode {
-    #[must_use] 
+    #[must_use]
     pub fn as_str(&self) -> &'static str {
         match self {
             AudioMode::Pulse => "pulse",
@@ -16,7 +16,7 @@ impl AudioMode {
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn infer(raw: &str) -> Option<Self> {
         let normalized = raw.to_ascii_lowercase();
         if normalized.contains("alsa") {

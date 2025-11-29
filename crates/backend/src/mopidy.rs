@@ -87,7 +87,7 @@ pub struct HttpMopidyClient {
 }
 
 impl HttpMopidyClient {
-    #[must_use] 
+    #[must_use]
     pub fn new(client: reqwest::Client, url: Url) -> Self {
         Self { client, url }
     }
