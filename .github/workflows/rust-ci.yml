@@ -28,6 +28,7 @@ jobs:
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: stable
           components: clippy, rustfmt
       - name: Cargo fmt
         run: cargo fmt --all -- --check

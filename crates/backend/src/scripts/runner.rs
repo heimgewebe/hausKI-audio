@@ -25,14 +25,14 @@ pub async fn run_script(
 
     let mut child = command
         .spawn()
-        .with_context(|| format!("failed to spawn {}", program))?;
+        .with_context(|| format!("failed to spawn {program}"))?;
 
     if let Some(payload) = input {
         if let Some(mut stdin) = child.stdin.take() {
             stdin
                 .write_all(payload.as_bytes())
                 .await
-                .with_context(|| format!("failed to write to stdin for {}", program))?;
+                .with_context(|| format!("failed to write to stdin for {program}"))?;
         }
     }
 
@@ -45,7 +45,7 @@ pub async fn run_script(
                 config.command_timeout
             )
         })
-        .and_then(|result| result.with_context(|| format!("command {} error", program)))?;
+        .and_then(|result| result.with_context(|| format!("command {program} error")))?;
 
     if !output.status.success() {
         return Err(anyhow!(
@@ -57,6 +57,6 @@ pub async fn run_script(
     }
 
     let s = String::from_utf8(output.stdout)
-        .map_err(|e| anyhow!("script did not output valid UTF-8: {}", e))?;
+        .map_err(|e| anyhow!("script did not output valid UTF-8: {e}"))?;
     Ok(s)
 }

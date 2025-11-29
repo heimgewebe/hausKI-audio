@@ -87,6 +87,7 @@ pub struct HttpMopidyClient {
 }
 
 impl HttpMopidyClient {
+    #[must_use]
     pub fn new(client: reqwest::Client, url: Url) -> Self {
         Self { client, url }
     }
@@ -116,8 +117,7 @@ async fn send_rpc(client: &reqwest::Client, url: &Url, payload: Value) -> Result
     if !status.is_success() {
         let body = String::from_utf8_lossy(&bytes);
         return Err(AppError::upstream(format!(
-            "Mopidy returned {status}: {body}",
-            status = status
+            "Mopidy returned {status}: {body}"
         )));
     }
 

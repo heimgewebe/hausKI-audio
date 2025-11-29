@@ -27,7 +27,7 @@ pub fn app_routes(state: AppState) -> Router {
 pub async fn health(State(state): State<AppState>) -> Result<Json<HealthResponse>, AppError> {
     let (overall_status, mopidy_status) = if state.config.check_mopidy_health {
         match state.mopidy.health_check().await {
-            Ok(_) => (
+            Ok(()) => (
                 "ok",
                 Some(MopidyHealth {
                     status: "ok".to_string(),
@@ -98,7 +98,7 @@ pub async fn set_mode(
             .await?;
     Ok(Json(CommandResponse {
         stdout: output.trim().to_string(),
-        stderr: "".to_string(),
+        stderr: String::new(),
     }))
 }
 
@@ -124,7 +124,7 @@ pub async fn playlist_from_list(
     .await?;
     Ok(Json(PlaylistResponse {
         stdout: output.trim().to_string(),
-        stderr: "".to_string(),
+        stderr: String::new(),
     }))
 }
 
