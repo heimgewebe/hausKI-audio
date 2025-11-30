@@ -12,7 +12,7 @@ pub trait MopidyClient: Send + Sync + 'static {
         let mut payload = Map::new();
         payload.insert("jsonrpc".into(), Value::String("2.0".into()));
         payload.insert("id".into(), Value::from(1));
-        payload.insert("method".into(), Value::String(method.to_string()));
+        payload.insert("method".into(), Value::String(method.into()));
         if let Some(params) = params {
             payload.insert("params".into(), params);
         }
@@ -70,7 +70,7 @@ pub trait MopidyClient: Send + Sync + 'static {
                         .get("message")
                         .and_then(Value::as_str)
                         .unwrap_or("RPC error returned");
-                    Err(message.to_string())
+                    Err(message.into())
                 } else {
                     Ok(())
                 }

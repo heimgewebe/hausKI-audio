@@ -58,7 +58,7 @@ impl AppConfig {
     pub fn from_env() -> Result<Self, ConfigError> {
         let bind_raw = env::var("HAUSKI_BACKEND_BIND")
             .or_else(|_| env::var("HAUSKI_BIND"))
-            .unwrap_or_else(|_| Self::DEFAULT_BIND.to_string());
+            .unwrap_or_else(|_| Self::DEFAULT_BIND.into());
         let bind_addr: SocketAddr = bind_raw
             .parse()
             .map_err(|_| ConfigError::InvalidBindAddress(bind_raw.clone()))?;
@@ -72,8 +72,7 @@ impl AppConfig {
 
         let audio_mode_script = ScriptConfig {
             program: PathBuf::from(
-                env::var("HAUSKI_AUDIO_MODE_CMD")
-                    .unwrap_or_else(|_| DEFAULT_AUDIO_MODE_CMD.to_string()),
+                env::var("HAUSKI_AUDIO_MODE_CMD").unwrap_or_else(|_| DEFAULT_AUDIO_MODE_CMD.into()),
             ),
         };
 
@@ -81,21 +80,19 @@ impl AppConfig {
             program: PathBuf::from(
                 env::var("HAUSKI_PLAYLIST_FROM_LIST_CMD")
                     .or_else(|_| env::var("HAUSKI_PLAYLIST_CMD"))
-                    .unwrap_or_else(|_| DEFAULT_PLAYLIST_CMD.to_string()),
+                    .unwrap_or_else(|_| DEFAULT_PLAYLIST_CMD.into()),
             ),
         };
 
         let rec_start_script = ScriptConfig {
             program: PathBuf::from(
-                env::var("HAUSKI_REC_START_CMD")
-                    .unwrap_or_else(|_| DEFAULT_REC_START_CMD.to_string()),
+                env::var("HAUSKI_REC_START_CMD").unwrap_or_else(|_| DEFAULT_REC_START_CMD.into()),
             ),
         };
 
         let rec_stop_script = ScriptConfig {
             program: PathBuf::from(
-                env::var("HAUSKI_REC_STOP_CMD")
-                    .unwrap_or_else(|_| DEFAULT_REC_STOP_CMD.to_string()),
+                env::var("HAUSKI_REC_STOP_CMD").unwrap_or_else(|_| DEFAULT_REC_STOP_CMD.into()),
             ),
         };
 
@@ -179,7 +176,7 @@ fn resolve_mopidy_rpc_url() -> Result<Url, ConfigError> {
     }
 
     Url::parse(AppConfig::DEFAULT_MOPIDY_RPC)
-        .map_err(|_| ConfigError::InvalidMopidyUrl(AppConfig::DEFAULT_MOPIDY_RPC.to_string()))
+        .map_err(|_| ConfigError::InvalidMopidyUrl(AppConfig::DEFAULT_MOPIDY_RPC.into()))
 }
 #[must_use]
 pub fn parse_bool(s: &str) -> Option<bool> {
