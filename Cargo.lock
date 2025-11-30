@@ -369,7 +369,6 @@ dependencies = [
  "dotenvy",
  "http 0.2.12",
  "http-body-util",
- "lazy_static",
  "regex",
  "reqwest",
  "serde",

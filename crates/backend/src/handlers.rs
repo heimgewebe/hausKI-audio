@@ -30,14 +30,14 @@ pub async fn health(State(state): State<AppState>) -> Result<Json<HealthResponse
             Ok(()) => (
                 "ok",
                 Some(MopidyHealth {
-                    status: "ok".to_string(),
+                    status: "ok".into(),
                     detail: None,
                 }),
             ),
             Err(err) => (
                 "degraded",
                 Some(MopidyHealth {
-                    status: "error".to_string(),
+                    status: "error".into(),
                     detail: Some(err),
                 }),
             ),
@@ -47,8 +47,8 @@ pub async fn health(State(state): State<AppState>) -> Result<Json<HealthResponse
     };
 
     Ok(Json(HealthResponse {
-        status: overall_status.to_string(),
-        version: Some(env!("CARGO_PKG_VERSION").to_string()),
+        status: overall_status.into(),
+        version: Some(env!("CARGO_PKG_VERSION").into()),
         mopidy: mopidy_status,
     }))
 }
@@ -67,16 +67,15 @@ pub async fn get_mode(State(state): State<AppState>) -> Result<Json<ModeGetRespo
     let script_path = state
         .config
         .audio_mode_script
-        .resolve_with(&state.config.script_workdir)
-        .to_str()
-        .unwrap_or_default()
-        .to_string();
-    let output = scripts::runner::run_script(&state.config, &script_path, &["show"], None).await?;
-    let trimmed = output.trim().to_string();
-    let inferred = crate::models::AudioMode::infer(&trimmed);
+        .resolve_with(&state.config.script_workdir);
+    let script_path_str = script_path.to_str().unwrap_or_default();
+    let output =
+        scripts::runner::run_script(&state.config, script_path_str, &["show"], None).await?;
+    let trimmed = output.trim();
+    let inferred = crate::models::AudioMode::infer(trimmed);
 
     Ok(Json(ModeGetResponse {
-        value: trimmed.clone(),
+        value: trimmed.into(),
         mode: inferred,
     }))
 }
@@ -89,15 +88,13 @@ pub async fn set_mode(
     let script_path = state
         .config
         .audio_mode_script
-        .resolve_with(&state.config.script_workdir)
-        .to_str()
-        .unwrap_or_default()
-        .to_string();
+        .resolve_with(&state.config.script_workdir);
+    let script_path_str = script_path.to_str().unwrap_or_default();
     let output =
-        scripts::runner::run_script(&state.config, &script_path, &[body.mode.as_str()], None)
+        scripts::runner::run_script(&state.config, script_path_str, &[body.mode.as_str()], None)
             .await?;
     Ok(Json(CommandResponse {
-        stdout: output.trim().to_string(),
+        stdout: output.trim().into(),
         stderr: String::new(),
     }))
 }
@@ -110,20 +107,18 @@ pub async fn playlist_from_list(
     let script_path = state
         .config
         .playlist_script
-        .resolve_with(&state.config.script_workdir)
-        .to_str()
-        .unwrap_or_default()
-        .to_string();
+        .resolve_with(&state.config.script_workdir);
+    let script_path_str = script_path.to_str().unwrap_or_default();
     let uris = body.uris.join("\n");
     let output = scripts::runner::run_script(
         &state.config,
-        &script_path,
+        script_path_str,
         &[&body.name, "--input", "-"],
         Some(&uris),
     )
     .await?;
     Ok(Json(PlaylistResponse {
-        stdout: output.trim().to_string(),
+        stdout: output.trim().into(),
         stderr: String::new(),
     }))
 }
