@@ -77,20 +77,19 @@ fn build_query(track: &Value) -> Option<String> {
         .and_then(|artist| artist.get("name"))
         .and_then(Value::as_str)
         .map(str::trim)
-        .filter(|value| !value.is_empty())
-        .map(std::string::ToString::to_string);
+        .filter(|value| !value.is_empty());
 
     let query = if let Some(artist) = artists {
         format!("{artist} {name}")
     } else {
-        name.to_string()
+        name.into()
     };
 
     Some(query)
 }
 
 fn build_track(track: &Value) -> Option<SimilarTrack> {
-    let uri = track.get("uri").and_then(Value::as_str)?.to_string();
+    let uri = track.get("uri").and_then(Value::as_str)?.into();
 
     // Name MUSS existieren und nicht leer sein
     let name = track
@@ -98,20 +97,20 @@ fn build_track(track: &Value) -> Option<SimilarTrack> {
         .and_then(Value::as_str)
         .map(str::trim)
         .filter(|s| !s.is_empty())?
-        .to_string();
+        .into();
     let album = track
         .get("album")
         .and_then(|album| album.get("name"))
         .and_then(Value::as_str)
-        .map(std::string::ToString::to_string);
+        .map(Into::into);
     let artists = track
         .get("artists")
         .and_then(Value::as_array)
         .map(|arr| {
             arr.iter()
                 .filter_map(|artist| artist.get("name").and_then(Value::as_str))
-                .map(std::string::ToString::to_string)
-                .collect::<Vec<_>>()
+                .map(Into::into)
+                .collect()
         })
         .unwrap_or_default();
 
