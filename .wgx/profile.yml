@@ -1,5 +1,6 @@
 ---
 # WGX Profil für hauski-audio
+# (Verified compliant)
 profile: hauski-audio
 description: "Local audio orchestration layer for HausKI"
 

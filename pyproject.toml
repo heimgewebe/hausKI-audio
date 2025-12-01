@@ -28,6 +28,8 @@ dev = [
 # Minimal-Konfig – reicht, um CI-Assertion zu erfüllen
 index-url = "https://pypi.org/simple"
 python-preference = "system"
+sync = true
+dev-dependencies = ["pytest", "ruff", "black", "mypy"]
 
 [tool.ruff]
 line-length = 79
