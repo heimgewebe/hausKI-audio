@@ -68,7 +68,9 @@ pub async fn get_mode(State(state): State<AppState>) -> Result<Json<ModeGetRespo
         .config
         .audio_mode_script
         .resolve_with(&state.config.script_workdir);
-    let script_path_str = script_path.to_str().unwrap_or_default();
+    let script_path_str = script_path
+        .to_str()
+        .ok_or_else(|| AppError::Internal("invalid UTF-8 path for audio_mode_script".into()))?;
     let output =
         scripts::runner::run_script(&state.config, script_path_str, &["show"], None).await?;
     let trimmed = output.trim();
@@ -89,7 +91,9 @@ pub async fn set_mode(
         .config
         .audio_mode_script
         .resolve_with(&state.config.script_workdir);
-    let script_path_str = script_path.to_str().unwrap_or_default();
+    let script_path_str = script_path
+        .to_str()
+        .ok_or_else(|| AppError::Internal("invalid UTF-8 path for audio_mode_script".into()))?;
     let output =
         scripts::runner::run_script(&state.config, script_path_str, &[body.mode.as_str()], None)
             .await?;
@@ -108,7 +112,9 @@ pub async fn playlist_from_list(
         .config
         .playlist_script
         .resolve_with(&state.config.script_workdir);
-    let script_path_str = script_path.to_str().unwrap_or_default();
+    let script_path_str = script_path
+        .to_str()
+        .ok_or_else(|| AppError::Internal("invalid UTF-8 path for playlist_script".into()))?;
     let uris = body.uris.join("\n");
     let output = scripts::runner::run_script(
         &state.config,
