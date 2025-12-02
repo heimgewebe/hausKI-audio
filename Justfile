@@ -38,12 +38,12 @@ lint-shell:
     shfmt -d -i 2 -ci -sr -- "${files[@]}"; \
     shellcheck -S style -- "${files[@]}"
 
-lint: _ensure_venv
-    {{_py_run}} ruff check .
-    {{_py_run}} black --check .
+lint:
+    uv run ruff check .
+    uv run black --check .
 
-test: _ensure_venv
-    {{_py_run}} pytest -q || echo "⚠️ no tests yet"
+test:
+    uv run pytest -q || echo "⚠️ no tests yet"
 
 test-all: _ensure_venv
     #!/usr/bin/env bash
