@@ -1,5 +1,5 @@
 pub mod config;
-mod discover;
+pub mod discover;
 pub mod error;
 mod handlers;
 mod models;
@@ -8,7 +8,7 @@ pub mod scripts;
 pub mod validation;
 
 pub use error::AppError;
-pub use models::AudioMode;
+pub use models::{AudioMode, SimilarResponse, SimilarTrack};
 pub use mopidy::{HttpMopidyClient, MopidyClient};
 
 use axum::Router;
