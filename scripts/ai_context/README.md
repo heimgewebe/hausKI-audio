@@ -5,12 +5,14 @@
 Validiert `.ai-context.yml` (Repo-Root) und optional Templates unter `ai-contexts/`.
 
 ### Was wird geprüft?
+
 - YAML parsebar
 - `project.name`, `project.summary`, `project.role` vorhanden und nicht leer
 - `ai_guidance.do` und `ai_guidance.dont` vorhanden und nicht leer
 - keine offensichtlichen Platzhalter: TODO / TBD / FIXME / lorem / ipsum
 
 ### Rollout-Logik (Patch in alle Repos einspeisen)
+
 - In NON-metarepo Repos reicht die Root-Datei: `/.ai-context.yml`
 - Template-Validierung (`--templates-dir`) läuft nur, wenn `ai-contexts/` existiert
 
