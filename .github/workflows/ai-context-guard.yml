@@ -1,9 +1,10 @@
+---
 name: ai-context guard
 
-on:
+"on":
   pull_request:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   repo-root:
