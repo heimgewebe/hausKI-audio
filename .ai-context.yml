@@ -6,7 +6,7 @@
 system_context:
   heimgeist: "../metarepo/ai-contexts/heimgeist.ai-context.yml"
 
-ai_context_version: 1.0
+ai_context_version: 1.1
 
 project:
   name: hauski-audio
@@ -14,6 +14,27 @@ project:
   role: audio_to_text_events
   primary_language: mixed
   visibility: internal
+
+heimgewebe:
+  axis:
+    - Events
+    - Motorik
+  fleet:
+    enabled: true
+  wgx:
+    profile_expected: true
+    guard_smoke_expected: true
+
+interfaces:
+  consumes:
+    - "mic/streams"
+  produces:
+    - "event.line"
+
+contracts:
+  schemas:
+    - path: "contracts/*.schema.json"
+      note: "Reference canonical schemas"
 
 dependencies:
   internal:
@@ -40,6 +61,13 @@ architecture:
     input: mic/streams
     processing: segment → transcribe → package
     output: JSONL events
+
+boundaries:
+  not_responsible_for:
+    - "Playback"
+    - "Storage of events"
+  dangerous_assumptions:
+    - "Assume repo is Fleet-enabled without checking .wgx/"
 
 conventions:
   branching: "main, feature/*"
