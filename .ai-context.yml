@@ -31,14 +31,9 @@ interfaces:
   produces:
     - "event.line"
 
-contracts:
-  schemas:
-    - path: "contracts/*.schema.json"
-      note: "Reference canonical schemas"
-
 dependencies:
   internal:
-    - name: contracts
+    - name: contracts-mirror
       relationship: uses
       interface:
         - audio_events_schema
@@ -75,7 +70,7 @@ conventions:
   ci_platform: github_actions
 
 documentation:
-  runbook: docs/runbook.md
+  runbook: docs/runbooks/backend_service.md
 
 ai_guidance:
   do:
