@@ -157,7 +157,7 @@ async fn health_endpoint_reports_mopidy_error() {
     let dir = TempDir::new().unwrap();
     let audio_script = "#!/usr/bin/env bash\nset -euo pipefail\nif [[ \"$1\" == \"show\" ]]; then\n  echo \"pulsesink\"\nelse\n  echo \"mode:$1\"\nfi\n";
     write_script(&dir, "audio-mode", audio_script);
-    let playlist_script = "#!/usr/bin/env bash\nset -euo pipefail\necho \"DEBUG: $1 $2 $3 $4 $5\"\nif [[ \"$3\" != \"--\" ]]; then echo \"missing --\" >&2; exit 1; fi\necho \"playlist:$4\"\ncat -\n";
+    let playlist_script = "#!/usr/bin/env bash\nset -euo pipefail\necho \"playlist:$1\"\ncat -\n";
     write_script(&dir, "playlist-from-list", playlist_script);
     write_script(&dir, "rec-start", "");
     write_script(&dir, "rec-stop", "");
@@ -200,7 +200,7 @@ async fn mode_endpoints_invoke_script() {
     let audio_script = "#!/usr/bin/env bash\nset -euo pipefail\nif [[ \"$1\" == \"show\" ]]; then\n  echo \"pulsesink\"\nelse\n  echo \"mode:$1\"\nfi\n";
     write_script(&dir, "audio-mode", audio_script);
     // Erwarte Aufruf: --input - -- <NAME>
-    let playlist_script = "#!/usr/bin/env bash\nset -euo pipefail\necho \"DEBUG: $1 $2 $3 $4 $5\"\nif [[ \"$3\" != \"--\" ]]; then echo \"missing --\" >&2; exit 1; fi\necho \"playlist:$4\"\ncat -\n";
+    let playlist_script = "#!/usr/bin/env bash\nset -euo pipefail\nif [[ \"$3\" != \"--\" ]]; then echo \"missing --\" >&2; exit 1; fi\necho \"playlist:$4\"\ncat -\n";
     write_script(&dir, "playlist-from-list", playlist_script);
     write_script(&dir, "rec-start", "");
     write_script(&dir, "rec-stop", "");
