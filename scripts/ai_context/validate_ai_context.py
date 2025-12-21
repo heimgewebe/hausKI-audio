@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
+"""Validates the .ai-context.yml file against the schema."""
 from __future__ import annotations
 
 import argparse
-import sys
 import re
+import sys
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 try:
     import yaml
-except Exception as e:
-    print("ERROR: PyYAML missing. Install with: pip install pyyaml", file=sys.stderr)
+except ImportError:
+    print("ERROR: PyYAML missing. Install with: pip install pyyaml", file=sys.stderr)  # noqa: T201
     raise
 
 
@@ -18,25 +19,29 @@ PLACEHOLDER_RE = re.compile(r"\b(TODO|TBD|FIXME|lorem|ipsum)\b", re.IGNORECASE)
 
 
 def err(msg: str) -> None:
-    print(f"ERROR: {msg}", file=sys.stderr)
+    """Print an error message to stderr."""
+    print(f"ERROR: {msg}", file=sys.stderr)  # noqa: T201
 
 
 def die(msg: str) -> None:
+    """Print an error message and exit with a non-zero status code."""
     err(msg)
     raise SystemExit(2)
 
 
-def load_yaml(p: Path) -> Dict[str, Any]:
+def load_yaml(p: Path) -> dict[str, Any]:
+    """Load YAML content from a file."""
     try:
         data = yaml.safe_load(p.read_text(encoding="utf-8"))
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         die(f"{p}: YAML parse failed: {e}")
     if not isinstance(data, dict):
         die(f"{p}: top-level must be a mapping/object")
     return data
 
 
-def get_str(d: Dict[str, Any], path: str) -> str:
+def get_str(d: dict[str, Any], path: str) -> str:
+    """Retrieve a string value from a nested dictionary using a dot-separated path."""
     cur: Any = d
     for k in path.split("."):
         if not isinstance(cur, dict) or k not in cur:
@@ -45,7 +50,8 @@ def get_str(d: Dict[str, Any], path: str) -> str:
     return cur if isinstance(cur, str) else ""
 
 
-def get_list(d: Dict[str, Any], path: str) -> List[Any]:
+def get_list(d: dict[str, Any], path: str) -> list[Any]:
+    """Retrieve a list value from a nested dictionary using a dot-separated path."""
     cur: Any = d
     for k in path.split("."):
         if not isinstance(cur, dict) or k not in cur:
@@ -54,7 +60,8 @@ def get_list(d: Dict[str, Any], path: str) -> List[Any]:
     return cur if isinstance(cur, list) else []
 
 
-def has_placeholders(obj: Any) -> bool:
+def has_placeholders(obj: Any) -> bool:  # noqa: ANN401
+    """Check if the object contains placeholder text (e.g., TODO, FIXME)."""
     if isinstance(obj, str):
         return bool(PLACEHOLDER_RE.search(obj))
     if isinstance(obj, list):
@@ -64,9 +71,10 @@ def has_placeholders(obj: Any) -> bool:
     return False
 
 
-def validate_one(p: Path) -> List[str]:
+def validate_one(p: Path) -> list[str]:
+    """Validate a single AI context file."""
     d = load_yaml(p)
-    errs: List[str] = []
+    errs: list[str] = []
 
     # Backwards-compatible: v1.0 has these keys; v1.1 adds more, but we keep required minimal.
     name = get_str(d, "project.name")
@@ -94,9 +102,10 @@ def validate_one(p: Path) -> List[str]:
 
 
 def validate_templates(dir_path: Path) -> int:
+    """Validate all template files in the specified directory."""
     if not dir_path.exists() or not dir_path.is_dir():
         die(f"templates dir missing: {dir_path}")
-    problems: List[Tuple[Path, List[str]]] = []
+    problems: list[tuple[Path, list[str]]] = []
     files = sorted(dir_path.glob("*.ai-context.yml"))
     if not files:
         die(f"no template files found in {dir_path}")
@@ -109,11 +118,12 @@ def validate_templates(dir_path: Path) -> int:
             for e in errs:
                 err(f"{p}: {e}")
         return 2
-    print("ai-context template validation OK")
+    print("ai-context template validation OK")  # noqa: T201
     return 0
 
 
 def validate_file(file_path: Path) -> int:
+    """Validate a specific AI context file."""
     if not file_path.exists():
         die(f"file missing: {file_path}")
     errs = validate_one(file_path)
@@ -121,11 +131,12 @@ def validate_file(file_path: Path) -> int:
         for e in errs:
             err(f"{file_path}: {e}")
         return 2
-    print("ai-context file validation OK")
+    print("ai-context file validation OK")  # noqa: T201
     return 0
 
 
 def main() -> int:
+    """Execute the main validation logic."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--file", help="Validate a single .ai-context.yml file")
     ap.add_argument("--templates-dir", help="Validate templates directory (metarepo)")
