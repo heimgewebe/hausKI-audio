@@ -1,11 +1,12 @@
+---
 name: ai-context guard
 permissions:
   contents: read
 
-on:
+"on":
   pull_request:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   repo-root:
