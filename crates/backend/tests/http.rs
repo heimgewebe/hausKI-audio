@@ -157,7 +157,7 @@ async fn health_endpoint_reports_mopidy_error() {
     let dir = TempDir::new().unwrap();
     let audio_script = "#!/usr/bin/env bash\nset -euo pipefail\nif [[ \"$1\" == \"show\" ]]; then\n  echo \"pulsesink\"\nelse\n  echo \"mode:$1\"\nfi\n";
     write_script(&dir, "audio-mode", audio_script);
-    let playlist_script = "#!/usr/bin/env bash\nset -euo pipefail\necho \"playlist:$1\"\ncat -\n";
+    let playlist_script = "#!/usr/bin/env bash\nset -euo pipefail\necho \"DEBUG: $1 $2 $3 $4 $5\"\nif [[ \"$3\" != \"--\" ]]; then echo \"missing --\" >&2; exit 1; fi\necho \"playlist:$4\"\ncat -\n";
     write_script(&dir, "playlist-from-list", playlist_script);
     write_script(&dir, "rec-start", "");
     write_script(&dir, "rec-stop", "");
@@ -199,7 +199,8 @@ async fn mode_endpoints_invoke_script() {
     let dir = TempDir::new().unwrap();
     let audio_script = "#!/usr/bin/env bash\nset -euo pipefail\nif [[ \"$1\" == \"show\" ]]; then\n  echo \"pulsesink\"\nelse\n  echo \"mode:$1\"\nfi\n";
     write_script(&dir, "audio-mode", audio_script);
-    let playlist_script = "#!/usr/bin/env bash\nset -euo pipefail\necho \"playlist:$1\"\ncat -\n";
+    // Erwarte Aufruf: --input - -- <NAME>
+    let playlist_script = "#!/usr/bin/env bash\nset -euo pipefail\necho \"DEBUG: $1 $2 $3 $4 $5\"\nif [[ \"$3\" != \"--\" ]]; then echo \"missing --\" >&2; exit 1; fi\necho \"playlist:$4\"\ncat -\n";
     write_script(&dir, "playlist-from-list", playlist_script);
     write_script(&dir, "rec-start", "");
     write_script(&dir, "rec-stop", "");
@@ -252,7 +253,8 @@ async fn playlist_endpoint_streams_uris() {
     let dir = TempDir::new().unwrap();
     let audio_script = "#!/usr/bin/env bash\nset -euo pipefail\nif [[ \"$1\" == \"show\" ]]; then\n  echo \"pulsesink\"\nelse\n  echo \"mode:$1\"\nfi\n";
     write_script(&dir, "audio-mode", audio_script);
-    let playlist_script = "#!/usr/bin/env bash\nset -euo pipefail\necho \"playlist:$1\"\ncat -\n";
+    // Erwarte Aufruf: --input - -- <NAME>
+    let playlist_script = "#!/usr/bin/env bash\nset -euo pipefail\nif [[ \"$3\" != \"--\" ]]; then echo \"missing --\" >&2; exit 1; fi\necho \"playlist:$4\"\ncat -\n";
     write_script(&dir, "playlist-from-list", playlist_script);
     write_script(&dir, "rec-start", "");
     write_script(&dir, "rec-stop", "");
@@ -279,8 +281,45 @@ async fn playlist_endpoint_streams_uris() {
     assert_eq!(response.status(), StatusCode::OK);
     let body = response.into_body().collect().await.unwrap().to_bytes();
     let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
-    assert!(json["stdout"].as_str().unwrap().contains("playlist:Test"));
+    let stdout = json["stdout"].as_str().unwrap();
+    assert!(stdout.contains("playlist:Test"), "Stdout was: {}", stdout);
     assert!(json["stdout"].as_str().unwrap().contains("qobuz:track:1"));
+}
+
+#[tokio::test]
+async fn playlist_endpoint_handles_dashed_names() {
+    let dir = TempDir::new().unwrap();
+    let audio_script = "#!/usr/bin/env bash\nset -euo pipefail\n";
+    write_script(&dir, "audio-mode", audio_script);
+    // Erwarte Aufruf: --input - -- <NAME>
+    let playlist_script = "#!/usr/bin/env bash\nset -euo pipefail\nif [[ \"$3\" != \"--\" ]]; then echo \"missing --\" >&2; exit 1; fi\necho \"playlist:$4\"\ncat -\n";
+    write_script(&dir, "playlist-from-list", playlist_script);
+    write_script(&dir, "rec-start", "");
+    write_script(&dir, "rec-stop", "");
+
+    let app = hauski_backend::build_router(test_config(&dir));
+    let payload = serde_json::json!({
+        "name": "-Dashboard",
+        "uris": ["track:1"],
+        "replace": true,
+    });
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/playlists/from-list")
+                .header("content-type", "application/json")
+                .body(Body::from(payload.to_string()))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = response.into_body().collect().await.unwrap().to_bytes();
+    let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+    assert!(json["stdout"].as_str().unwrap().contains("playlist:-Dashboard"));
 }
 
 #[tokio::test]

@@ -119,7 +119,7 @@ pub async fn playlist_from_list(
     let output = scripts::runner::run_script(
         &state.config,
         script_path_str,
-        &[&body.name, "--input", "-"],
+        &["--input", "-", "--", &body.name],
         Some(&uris),
     )
     .await?;
