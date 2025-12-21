@@ -17,6 +17,12 @@ concurrency:
       - 'Cargo.lock'
       - 'crates/**'
       - 'Justfile'
+  workflow_call:
+    inputs:
+      toolchain:
+        required: false
+        type: string
+        default: stable
 
 jobs:
   backend:
@@ -28,7 +34,7 @@ jobs:
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
+          toolchain: ${{ inputs.toolchain || 'stable' }}
           components: clippy, rustfmt
       - name: Cargo fmt
         run: cargo fmt --all -- --check
