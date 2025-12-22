@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validates the .ai-context.yml file against the schema."""
+
 from __future__ import annotations
 
 import argparse
@@ -11,7 +12,10 @@ from typing import Any
 try:
     import yaml
 except ImportError:
-    print("ERROR: PyYAML missing. Install with: pip install pyyaml", file=sys.stderr)  # noqa: T201
+    print(
+        "ERROR: PyYAML missing. Install with: pip install pyyaml",
+        file=sys.stderr,
+    )  # noqa: T201
     raise
 
 
@@ -139,7 +143,9 @@ def main() -> int:
     """Execute the main validation logic."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--file", help="Validate a single .ai-context.yml file")
-    ap.add_argument("--templates-dir", help="Validate templates directory (metarepo)")
+    ap.add_argument(
+        "--templates-dir", help="Validate templates directory (metarepo)"
+    )
     args = ap.parse_args()
 
     if not args.file and not args.templates_dir:
