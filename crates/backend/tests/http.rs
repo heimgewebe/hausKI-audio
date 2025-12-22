@@ -319,7 +319,10 @@ async fn playlist_endpoint_handles_dashed_names() {
     assert_eq!(response.status(), StatusCode::OK);
     let body = response.into_body().collect().await.unwrap().to_bytes();
     let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
-    assert!(json["stdout"].as_str().unwrap().contains("playlist:-Dashboard"));
+    assert!(json["stdout"]
+        .as_str()
+        .unwrap()
+        .contains("playlist:-Dashboard"));
 }
 
 #[tokio::test]
