@@ -69,7 +69,7 @@ audio-mode MODE="show" *ARGS:
     ./scripts/audio-mode "{{MODE}}" {{ARGS}}
 
 playlist-from-list NAME INPUT *ARGS:
-    ./scripts/playlist-from-list "{{NAME}}" --input "{{INPUT}}" {{ARGS}}
+    ./scripts/playlist-from-list --input "{{INPUT}}" {{ARGS}} -- "{{NAME}}"
 
 rec-start *ARGS:
     ./scripts/rec-start {{ARGS}}
