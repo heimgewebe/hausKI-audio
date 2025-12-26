@@ -12,10 +12,10 @@ from typing import Any
 try:
     import yaml
 except ImportError:
-    print(
+    print(  # noqa: T201
         "ERROR: PyYAML missing. Install with: pip install pyyaml",
         file=sys.stderr,
-    )  # noqa: T201
+    )
     raise
 
 
@@ -144,7 +144,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--file", help="Validate a single .ai-context.yml file")
     ap.add_argument(
-        "--templates-dir", help="Validate templates directory (metarepo)"
+        "--templates-dir", help="Validate templates directory (metarepo)",
     )
     args = ap.parse_args()
 
