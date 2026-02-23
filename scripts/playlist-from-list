@@ -13,11 +13,15 @@ DEFAULT_RPC_URL = "http://127.0.0.1:6680/mopidy/rpc"
 
 
 class MopidyClient:
+    """Client for interacting with Mopidy via JSON-RPC."""
+
     def __init__(self, rpc_url: str) -> None:
+        """Initialize the Mopidy client with the given RPC URL."""
         self.rpc_url = rpc_url
         self._next_id = 1
 
     def call(self, method: str, params: dict[str, Any] | None = None) -> Any:
+        """Call a Mopidy JSON-RPC method with optional parameters."""
         payload = {
             "jsonrpc": "2.0",
             "id": self._next_id,
@@ -50,6 +54,7 @@ class MopidyClient:
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
         description="Create or replace a Mopidy playlist from newline-delimited track URIs.",
     )
@@ -84,12 +89,14 @@ def parse_args() -> argparse.Namespace:
 
 
 def load_uris(source: str) -> list[str]:
+    """Load track URIs from a file or standard input."""
     text = sys.stdin.read() if source == "-" else Path(source).read_text()
     lines = [line.strip() for line in text.splitlines()]
     return [line for line in lines if line and not line.startswith("#")]
 
 
 def find_existing(client: MopidyClient, name: str) -> dict[str, Any] | None:
+    """Find an existing playlist by name."""
     playlists: list[Any] = client.call("core.playlists.as_list") or []
     for playlist in playlists:
         if playlist.get("name") == name:
@@ -98,6 +105,7 @@ def find_existing(client: MopidyClient, name: str) -> dict[str, Any] | None:
 
 
 def load_playlist(client: MopidyClient, uri: str) -> dict[str, Any]:
+    """Retrieve a playlist's details by its URI."""
     playlist = client.call("core.playlists.lookup", {"uri": uri})
     if isinstance(playlist, dict):
         return playlist
@@ -107,6 +115,7 @@ def load_playlist(client: MopidyClient, uri: str) -> dict[str, Any]:
 def ensure_playlist(
     client: MopidyClient, *, name: str, scheme: str | None, replace: bool
 ) -> dict[str, Any]:
+    """Ensure a playlist exists, creating it or clearing it as necessary."""
     existing = find_existing(client, name)
     if existing and not replace:
         raise RuntimeError(
@@ -131,15 +140,18 @@ def ensure_playlist(
 
 
 def to_track(uri: str) -> dict[str, str]:
+    """Convert a URI into a Mopidy track model dictionary."""
     return {"__model__": "Track", "uri": uri}
 
 
 def save_playlist(client: MopidyClient, playlist: dict[str, Any]) -> Any:
+    """Save a playlist to Mopidy."""
     playlist.setdefault("__model__", "Playlist")
     return client.call("core.playlists.save", {"playlist": playlist})
 
 
 def main() -> None:
+    """Execute the script's main logic."""
     args = parse_args()
     uris = load_uris(args.input)
     if not uris:
