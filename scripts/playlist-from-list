@@ -53,7 +53,6 @@ class MopidyClient:
 
 
 def parse_args() -> argparse.Namespace:
-    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
         description="Create or replace a Mopidy playlist from newline-delimited track URIs.",
     )
@@ -95,7 +94,6 @@ def load_uris(source: str) -> list[str]:
 
 
 def find_existing(client: MopidyClient, name: str) -> dict[str, Any] | None:
-    """Find an existing playlist by name."""
     playlists: list[Any] = client.call("core.playlists.as_list") or []
     for playlist in playlists:
         if playlist.get("name") == name:
@@ -104,7 +102,6 @@ def find_existing(client: MopidyClient, name: str) -> dict[str, Any] | None:
 
 
 def load_playlist(client: MopidyClient, uri: str) -> dict[str, Any]:
-    """Retrieve a playlist's details by its URI."""
     playlist = client.call("core.playlists.lookup", {"uri": uri})
     if isinstance(playlist, dict):
         return playlist
@@ -112,13 +109,13 @@ def load_playlist(client: MopidyClient, uri: str) -> dict[str, Any]:
 
 
 def ensure_playlist(
-    client: MopidyClient, *, name: str, scheme: str | None, replace: bool,
+    client: MopidyClient, *, name: str, scheme: str | None, replace: bool
 ) -> dict[str, Any]:
     """Ensure a playlist exists, creating it or clearing it as necessary."""
     existing = find_existing(client, name)
     if existing and not replace:
         raise RuntimeError(
-            f"Playlist '{name}' already exists. Use --replace to overwrite it.",
+            f"Playlist '{name}' already exists. Use --replace to overwrite it."
         )
     if existing and replace:
         playlist_uri = existing.get("uri")
@@ -144,21 +141,19 @@ def to_track(uri: str) -> dict[str, str]:
 
 
 def save_playlist(client: MopidyClient, playlist: dict[str, Any]) -> Any:
-    """Save a playlist to Mopidy."""
     playlist.setdefault("__model__", "Playlist")
     return client.call("core.playlists.save", {"playlist": playlist})
 
 
 def main() -> None:
-    """Execute the script's main logic."""
     args = parse_args()
     uris = load_uris(args.input)
     if not uris:
-        print("No track URIs found in input.", file=sys.stderr)  # noqa: T201
+        print("No track URIs found in input.", file=sys.stderr)
         sys.exit(1)
 
     if args.dry_run:
-        print(f"Would send {len(uris)} tracks to playlist '{args.name}'.")  # noqa: T201
+        print(f"Would send {len(uris)} tracks to playlist '{args.name}'.")
         return
 
     client = MopidyClient(args.rpc_url)
@@ -171,9 +166,9 @@ def main() -> None:
     playlist["tracks"] = [to_track(uri) for uri in uris]
     saved = save_playlist(client, playlist)
     uri = saved.get("uri") if isinstance(saved, dict) else None
-    print(  # noqa: T201
+    print(
         f"Playlist '{args.name}' updated with {len(uris)} tracks." +
-        (f" URI: {uri}" if uri else ""),
+        (f" URI: {uri}" if uri else "")
     )
 
 
@@ -181,5 +176,5 @@ if __name__ == "__main__":
     try:
         main()
     except RuntimeError as exc:
-        print(str(exc), file=sys.stderr)  # noqa: T201
+        print(str(exc), file=sys.stderr)
         sys.exit(2)
