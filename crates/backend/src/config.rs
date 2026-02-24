@@ -413,4 +413,16 @@ mod tests {
         let result = AppConfig::from_source(&get_env, get_cwd);
         assert!(matches!(result, Err(ConfigError::WorkingDirectory(_))));
     }
+
+    #[test]
+    fn test_app_config_timeout_fallback() {
+        let mut env = HashMap::new();
+        env.insert("HAUSKI_COMMAND_TIMEOUT_MS".into(), "not-a-number".into());
+        let get_env = |k: &str| env.get(k).cloned();
+        let get_cwd = || Ok(PathBuf::from("/app"));
+
+        let config = AppConfig::from_source(&get_env, get_cwd).unwrap();
+        // Should fall back to DEFAULT_COMMAND_TIMEOUT_MS (10_000)
+        assert_eq!(config.command_timeout, Duration::from_millis(10_000));
+    }
 }
