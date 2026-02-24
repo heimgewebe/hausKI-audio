@@ -56,10 +56,11 @@ impl AppConfig {
     const DEFAULT_COMMAND_TIMEOUT_MS: u64 = 10_000;
 
     pub fn from_env() -> Result<Self, ConfigError> {
-        Self::from_source(|key| env::var(key).ok(), env::current_dir)
+        let get_env = |key: &str| env::var(key).ok();
+        Self::from_source(&get_env, env::current_dir)
     }
 
-    fn from_source<F, G>(get_env: F, get_cwd: G) -> Result<Self, ConfigError>
+    fn from_source<F, G>(get_env: &F, get_cwd: G) -> Result<Self, ConfigError>
     where
         F: Fn(&str) -> Option<String>,
         G: Fn() -> Result<PathBuf, std::io::Error>,
@@ -71,7 +72,7 @@ impl AppConfig {
             .parse()
             .map_err(|_| ConfigError::InvalidBindAddress(bind_raw.clone()))?;
 
-        let mopidy_rpc_url = resolve_mopidy_rpc_url(&get_env)?;
+        let mopidy_rpc_url = resolve_mopidy_rpc_url(get_env)?;
 
         let workdir = match get_env("HAUSKI_SCRIPT_WORKDIR") {
             Some(value) => PathBuf::from(value),
@@ -108,7 +109,7 @@ impl AppConfig {
             .and_then(|raw| raw.parse().ok())
             .unwrap_or(Self::DEFAULT_COMMAND_TIMEOUT_MS);
 
-        let check_mopidy_health = env_bool_source("HAUSKI_CHECK_MOPIDY_HEALTH", true, &get_env);
+        let check_mopidy_health = env_bool_source("HAUSKI_CHECK_MOPIDY_HEALTH", true, get_env);
 
         Ok(Self {
             bind_addr,
@@ -165,7 +166,7 @@ impl AppConfig {
         Ok(())
     }
 }
-fn resolve_mopidy_rpc_url<F>(get_env: F) -> Result<Url, ConfigError>
+fn resolve_mopidy_rpc_url<F>(get_env: &F) -> Result<Url, ConfigError>
 where
     F: Fn(&str) -> Option<String>,
 {
@@ -196,10 +197,10 @@ pub fn parse_bool(s: &str) -> Option<bool> {
 }
 #[must_use]
 pub fn env_bool(key: &str, default: bool) -> bool {
-    env_bool_source(key, default, |k| env::var(k).ok())
+    env_bool_source(key, default, &|k| env::var(k).ok())
 }
 
-fn env_bool_source<F>(key: &str, default: bool, get_env: F) -> bool
+fn env_bool_source<F>(key: &str, default: bool, get_env: &F) -> bool
 where
     F: Fn(&str) -> Option<String>,
 {
@@ -272,7 +273,7 @@ mod tests {
         let get_env = |k: &str| env.get(k).cloned();
         let get_cwd = || Ok(PathBuf::from("/app"));
 
-        let config = AppConfig::from_source(get_env, get_cwd).unwrap();
+        let config = AppConfig::from_source(&get_env, get_cwd).unwrap();
 
         assert_eq!(config.bind_addr, "127.0.0.1:8080".parse().unwrap());
         assert_eq!(
@@ -300,7 +301,7 @@ mod tests {
         let get_env = |k: &str| env.get(k).cloned();
         let get_cwd = || Ok(PathBuf::from("/app"));
 
-        let config = AppConfig::from_source(get_env, get_cwd).unwrap();
+        let config = AppConfig::from_source(&get_env, get_cwd).unwrap();
 
         assert_eq!(config.bind_addr, "0.0.0.0:9000".parse().unwrap());
         assert_eq!(config.mopidy_rpc_url.as_str(), "http://mopidy:6680/rpc");
@@ -321,7 +322,7 @@ mod tests {
         let get_env = |k: &str| env.get(k).cloned();
         let get_cwd = || Ok(PathBuf::from("/app"));
 
-        let config = AppConfig::from_source(get_env, get_cwd).unwrap();
+        let config = AppConfig::from_source(&get_env, get_cwd).unwrap();
         assert_eq!(
             config.mopidy_rpc_url.as_str(),
             "http://localhost:6680/mopidy/rpc"
@@ -335,7 +336,79 @@ mod tests {
         let get_env = |k: &str| env.get(k).cloned();
         let get_cwd = || Ok(PathBuf::from("/app"));
 
-        let result = AppConfig::from_source(get_env, get_cwd);
+        let result = AppConfig::from_source(&get_env, get_cwd);
         assert!(matches!(result, Err(ConfigError::InvalidBindAddress(_))));
+    }
+
+    #[test]
+    fn test_env_bool_source_invalid_value_falls_back() {
+        let mut env = HashMap::new();
+        env.insert("HAUSKI_CHECK_MOPIDY_HEALTH".into(), "maybe".into());
+        let get_env = |k: &str| env.get(k).cloned();
+
+        // Should fall back to default when value is invalid
+        assert!(env_bool_source(
+            "HAUSKI_CHECK_MOPIDY_HEALTH",
+            true,
+            &get_env
+        ));
+        assert!(!env_bool_source(
+            "HAUSKI_CHECK_MOPIDY_HEALTH",
+            false,
+            &get_env
+        ));
+    }
+
+    #[test]
+    fn test_invalid_mopidy_http_url_returns_error() {
+        let mut env = HashMap::new();
+        env.insert("MOPIDY_HTTP_URL".into(), "not a url".into());
+        let get_env = |k: &str| env.get(k).cloned();
+        let get_cwd = || Ok(PathBuf::from("/app"));
+
+        let result = AppConfig::from_source(&get_env, get_cwd);
+        assert!(matches!(result, Err(ConfigError::InvalidMopidyUrl(_))));
+    }
+
+    #[test]
+    fn test_invalid_direct_mopidy_rpc_url_returns_error() {
+        let mut env = HashMap::new();
+        env.insert("HAUSKI_MOPIDY_RPC_URL".into(), "://bad".into());
+        let get_env = |k: &str| env.get(k).cloned();
+        let get_cwd = || Ok(PathBuf::from("/app"));
+
+        let result = AppConfig::from_source(&get_env, get_cwd);
+        assert!(matches!(result, Err(ConfigError::InvalidMopidyUrl(_))));
+
+        let mut env = HashMap::new();
+        env.insert("MOPIDY_RPC_URL".into(), "://bad".into());
+        let get_env = |k: &str| env.get(k).cloned();
+        let result = AppConfig::from_source(&get_env, get_cwd);
+        assert!(matches!(result, Err(ConfigError::InvalidMopidyUrl(_))));
+    }
+
+    #[test]
+    fn test_mopidy_rpc_url_priority_hauski_overrides_mopidy() {
+        let mut env = HashMap::new();
+        env.insert(
+            "HAUSKI_MOPIDY_RPC_URL".into(),
+            "http://hauski-mopidy/rpc".into(),
+        );
+        env.insert("MOPIDY_RPC_URL".into(), "http://other-mopidy/rpc".into());
+        let get_env = |k: &str| env.get(k).cloned();
+        let get_cwd = || Ok(PathBuf::from("/app"));
+
+        let config = AppConfig::from_source(&get_env, get_cwd).unwrap();
+        assert_eq!(config.mopidy_rpc_url.as_str(), "http://hauski-mopidy/rpc");
+    }
+
+    #[test]
+    fn test_get_cwd_error_without_workdir_env() {
+        let env = HashMap::new();
+        let get_env = |k: &str| env.get(k).cloned();
+        let get_cwd = || Err(std::io::Error::new(std::io::ErrorKind::Other, "CWD error"));
+
+        let result = AppConfig::from_source(&get_env, get_cwd);
+        assert!(matches!(result, Err(ConfigError::WorkingDirectory(_))));
     }
 }
