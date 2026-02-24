@@ -197,7 +197,8 @@ pub fn parse_bool(s: &str) -> Option<bool> {
 }
 #[must_use]
 pub fn env_bool(key: &str, default: bool) -> bool {
-    env_bool_source(key, default, &|k| env::var(k).ok())
+    let get_env = |k: &str| env::var(k).ok();
+    env_bool_source(key, default, &get_env)
 }
 
 fn env_bool_source<F>(key: &str, default: bool, get_env: &F) -> bool
@@ -373,16 +374,17 @@ mod tests {
     #[test]
     fn test_invalid_direct_mopidy_rpc_url_returns_error() {
         let mut env = HashMap::new();
-        env.insert("HAUSKI_MOPIDY_RPC_URL".into(), "://bad".into());
-        let get_env = |k: &str| env.get(k).cloned();
         let get_cwd = || Ok(PathBuf::from("/app"));
+        let get_env = |k: &str| env.get(k).cloned();
 
+        // 1. HAUSKI_MOPIDY_RPC_URL invalid
+        env.insert("HAUSKI_MOPIDY_RPC_URL".into(), "://bad".into());
         let result = AppConfig::from_source(&get_env, get_cwd);
         assert!(matches!(result, Err(ConfigError::InvalidMopidyUrl(_))));
 
-        let mut env = HashMap::new();
+        // 2. MOPIDY_RPC_URL invalid (HAUSKI_* not set)
+        env.clear();
         env.insert("MOPIDY_RPC_URL".into(), "://bad".into());
-        let get_env = |k: &str| env.get(k).cloned();
         let result = AppConfig::from_source(&get_env, get_cwd);
         assert!(matches!(result, Err(ConfigError::InvalidMopidyUrl(_))));
     }
