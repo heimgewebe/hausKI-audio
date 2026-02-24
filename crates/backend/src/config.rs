@@ -213,6 +213,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::cell::RefCell;
     use std::collections::HashMap;
 
     #[test]
@@ -373,18 +374,20 @@ mod tests {
 
     #[test]
     fn test_invalid_direct_mopidy_rpc_url_returns_error() {
-        let mut env = HashMap::<String, String>::new();
+        let env = RefCell::new(HashMap::<String, String>::new());
         let get_cwd = || Ok(PathBuf::from("/app"));
-        let get_env = |k: &str| env.get(k).cloned();
+        let get_env = |k: &str| env.borrow().get(k).cloned();
 
         // 1. HAUSKI_MOPIDY_RPC_URL invalid
-        env.insert("HAUSKI_MOPIDY_RPC_URL".into(), "://bad".into());
+        env.borrow_mut()
+            .insert("HAUSKI_MOPIDY_RPC_URL".into(), "://bad".into());
         let result = AppConfig::from_source(&get_env, get_cwd);
         assert!(matches!(result, Err(ConfigError::InvalidMopidyUrl(_))));
 
         // 2. MOPIDY_RPC_URL invalid (HAUSKI_* not set)
-        env.clear();
-        env.insert("MOPIDY_RPC_URL".into(), "://bad".into());
+        env.borrow_mut().clear();
+        env.borrow_mut()
+            .insert("MOPIDY_RPC_URL".into(), "://bad".into());
         let result = AppConfig::from_source(&get_env, get_cwd);
         assert!(matches!(result, Err(ConfigError::InvalidMopidyUrl(_))));
     }
@@ -428,29 +431,32 @@ mod tests {
 
     #[test]
     fn test_app_config_bind_fallbacks() {
-        let mut env = HashMap::<String, String>::new();
+        let env = RefCell::new(HashMap::<String, String>::new());
         let get_cwd = || Ok(PathBuf::from("/app"));
-        let get_env = |k: &str| env.get(k).cloned();
+        let get_env = |k: &str| env.borrow().get(k).cloned();
 
         // HAUSKI_BIND as fallback for HAUSKI_BACKEND_BIND
-        env.insert("HAUSKI_BIND".into(), "127.0.0.1:9999".into());
+        env.borrow_mut()
+            .insert("HAUSKI_BIND".into(), "127.0.0.1:9999".into());
         let config = AppConfig::from_source(&get_env, get_cwd).unwrap();
         assert_eq!(config.bind_addr, "127.0.0.1:9999".parse().unwrap());
 
         // HAUSKI_BACKEND_BIND takes precedence
-        env.insert("HAUSKI_BACKEND_BIND".into(), "127.0.0.1:8888".into());
+        env.borrow_mut()
+            .insert("HAUSKI_BACKEND_BIND".into(), "127.0.0.1:8888".into());
         let config = AppConfig::from_source(&get_env, get_cwd).unwrap();
         assert_eq!(config.bind_addr, "127.0.0.1:8888".parse().unwrap());
     }
 
     #[test]
     fn test_app_config_playlist_script_fallbacks() {
-        let mut env = HashMap::<String, String>::new();
+        let env = RefCell::new(HashMap::<String, String>::new());
         let get_cwd = || Ok(PathBuf::from("/app"));
-        let get_env = |k: &str| env.get(k).cloned();
+        let get_env = |k: &str| env.borrow().get(k).cloned();
 
         // HAUSKI_PLAYLIST_CMD as fallback
-        env.insert("HAUSKI_PLAYLIST_CMD".into(), "old-playlist-cmd".into());
+        env.borrow_mut()
+            .insert("HAUSKI_PLAYLIST_CMD".into(), "old-playlist-cmd".into());
         let config = AppConfig::from_source(&get_env, get_cwd).unwrap();
         assert_eq!(
             config.playlist_script.program,
@@ -458,7 +464,7 @@ mod tests {
         );
 
         // HAUSKI_PLAYLIST_FROM_LIST_CMD takes precedence
-        env.insert(
+        env.borrow_mut().insert(
             "HAUSKI_PLAYLIST_FROM_LIST_CMD".into(),
             "new-playlist-cmd".into(),
         );
