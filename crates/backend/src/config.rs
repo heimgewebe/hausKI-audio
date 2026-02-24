@@ -235,7 +235,7 @@ mod tests {
 
     #[test]
     fn test_env_bool_source() {
-        let mut env = HashMap::new();
+        let mut env = HashMap::<String, String>::new();
         env.insert("FOO".to_string(), "true".to_string());
         env.insert("BAR".to_string(), "0".to_string());
 
@@ -270,7 +270,7 @@ mod tests {
 
     #[test]
     fn test_app_config_defaults() {
-        let env = HashMap::new();
+        let env = HashMap::<String, String>::new();
         let get_env = |k: &str| env.get(k).cloned();
         let get_cwd = || Ok(PathBuf::from("/app"));
 
@@ -288,7 +288,7 @@ mod tests {
 
     #[test]
     fn test_app_config_overrides() {
-        let mut env = HashMap::new();
+        let mut env = HashMap::<String, String>::new();
         env.insert("HAUSKI_BACKEND_BIND".into(), "0.0.0.0:9000".into());
         env.insert(
             "HAUSKI_MOPIDY_RPC_URL".into(),
@@ -318,7 +318,7 @@ mod tests {
     #[test]
     fn test_mopidy_url_resolution() {
         // Test MOPIDY_HTTP_URL fallback
-        let mut env = HashMap::new();
+        let mut env = HashMap::<String, String>::new();
         env.insert("MOPIDY_HTTP_URL".into(), "http://localhost:6680".into());
         let get_env = |k: &str| env.get(k).cloned();
         let get_cwd = || Ok(PathBuf::from("/app"));
@@ -332,7 +332,7 @@ mod tests {
 
     #[test]
     fn test_invalid_bind_address() {
-        let mut env = HashMap::new();
+        let mut env = HashMap::<String, String>::new();
         env.insert("HAUSKI_BIND".into(), "invalid".into());
         let get_env = |k: &str| env.get(k).cloned();
         let get_cwd = || Ok(PathBuf::from("/app"));
@@ -343,7 +343,7 @@ mod tests {
 
     #[test]
     fn test_env_bool_source_invalid_value_falls_back() {
-        let mut env = HashMap::new();
+        let mut env = HashMap::<String, String>::new();
         env.insert("HAUSKI_CHECK_MOPIDY_HEALTH".into(), "maybe".into());
         let get_env = |k: &str| env.get(k).cloned();
 
@@ -362,7 +362,7 @@ mod tests {
 
     #[test]
     fn test_invalid_mopidy_http_url_returns_error() {
-        let mut env = HashMap::new();
+        let mut env = HashMap::<String, String>::new();
         env.insert("MOPIDY_HTTP_URL".into(), "not a url".into());
         let get_env = |k: &str| env.get(k).cloned();
         let get_cwd = || Ok(PathBuf::from("/app"));
@@ -373,7 +373,7 @@ mod tests {
 
     #[test]
     fn test_invalid_direct_mopidy_rpc_url_returns_error() {
-        let mut env = HashMap::new();
+        let mut env = HashMap::<String, String>::new();
         let get_cwd = || Ok(PathBuf::from("/app"));
         let get_env = |k: &str| env.get(k).cloned();
 
@@ -391,7 +391,7 @@ mod tests {
 
     #[test]
     fn test_mopidy_rpc_url_priority_hauski_overrides_mopidy() {
-        let mut env = HashMap::new();
+        let mut env = HashMap::<String, String>::new();
         env.insert(
             "HAUSKI_MOPIDY_RPC_URL".into(),
             "http://hauski-mopidy/rpc".into(),
@@ -406,7 +406,7 @@ mod tests {
 
     #[test]
     fn test_get_cwd_error_without_workdir_env() {
-        let env = HashMap::new();
+        let env = HashMap::<String, String>::new();
         let get_env = |k: &str| env.get(k).cloned();
         let get_cwd = || Err(std::io::Error::new(std::io::ErrorKind::Other, "CWD error"));
 
@@ -416,7 +416,7 @@ mod tests {
 
     #[test]
     fn test_app_config_timeout_fallback() {
-        let mut env = HashMap::new();
+        let mut env = HashMap::<String, String>::new();
         env.insert("HAUSKI_COMMAND_TIMEOUT_MS".into(), "not-a-number".into());
         let get_env = |k: &str| env.get(k).cloned();
         let get_cwd = || Ok(PathBuf::from("/app"));
@@ -424,5 +424,48 @@ mod tests {
         let config = AppConfig::from_source(&get_env, get_cwd).unwrap();
         // Should fall back to DEFAULT_COMMAND_TIMEOUT_MS (10_000)
         assert_eq!(config.command_timeout, Duration::from_millis(10_000));
+    }
+
+    #[test]
+    fn test_app_config_bind_fallbacks() {
+        let mut env = HashMap::<String, String>::new();
+        let get_cwd = || Ok(PathBuf::from("/app"));
+        let get_env = |k: &str| env.get(k).cloned();
+
+        // HAUSKI_BIND as fallback for HAUSKI_BACKEND_BIND
+        env.insert("HAUSKI_BIND".into(), "127.0.0.1:9999".into());
+        let config = AppConfig::from_source(&get_env, get_cwd).unwrap();
+        assert_eq!(config.bind_addr, "127.0.0.1:9999".parse().unwrap());
+
+        // HAUSKI_BACKEND_BIND takes precedence
+        env.insert("HAUSKI_BACKEND_BIND".into(), "127.0.0.1:8888".into());
+        let config = AppConfig::from_source(&get_env, get_cwd).unwrap();
+        assert_eq!(config.bind_addr, "127.0.0.1:8888".parse().unwrap());
+    }
+
+    #[test]
+    fn test_app_config_playlist_script_fallbacks() {
+        let mut env = HashMap::<String, String>::new();
+        let get_cwd = || Ok(PathBuf::from("/app"));
+        let get_env = |k: &str| env.get(k).cloned();
+
+        // HAUSKI_PLAYLIST_CMD as fallback
+        env.insert("HAUSKI_PLAYLIST_CMD".into(), "old-playlist-cmd".into());
+        let config = AppConfig::from_source(&get_env, get_cwd).unwrap();
+        assert_eq!(
+            config.playlist_script.program,
+            PathBuf::from("old-playlist-cmd")
+        );
+
+        // HAUSKI_PLAYLIST_FROM_LIST_CMD takes precedence
+        env.insert(
+            "HAUSKI_PLAYLIST_FROM_LIST_CMD".into(),
+            "new-playlist-cmd".into(),
+        );
+        let config = AppConfig::from_source(&get_env, get_cwd).unwrap();
+        assert_eq!(
+            config.playlist_script.program,
+            PathBuf::from("new-playlist-cmd")
+        );
     }
 }
