@@ -410,7 +410,7 @@ mod tests {
     fn test_get_cwd_error_without_workdir_env() {
         let env = HashMap::<String, String>::new();
         let get_env = |k: &str| env.get(k).cloned();
-        let get_cwd = || Err(std::io::Error::new(std::io::ErrorKind::Other, "CWD error"));
+        let get_cwd = || Err(std::io::Error::other("CWD error"));
 
         let result = AppConfig::from_source(&get_env, get_cwd);
         assert!(matches!(result, Err(ConfigError::WorkingDirectory(_))));
