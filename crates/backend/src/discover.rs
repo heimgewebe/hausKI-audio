@@ -40,6 +40,12 @@ pub async fn similar_tracks(
     for backend in search_results {
         if let Some(tracks) = backend.get("tracks").and_then(Value::as_array) {
             for track in tracks {
+                if let Some(uri) = track.get("uri").and_then(Value::as_str) {
+                    if seen.contains(uri) {
+                        continue;
+                    }
+                }
+
                 let Some(candidate) = build_track(track) else {
                     continue;
                 };
