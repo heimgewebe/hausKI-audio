@@ -40,6 +40,12 @@ pub async fn similar_tracks(
     for backend in search_results {
         if let Some(tracks) = backend.get("tracks").and_then(Value::as_array) {
             for track in tracks {
+                if let Some(uri) = track.get("uri").and_then(Value::as_str) {
+                    if seen.contains(uri) {
+                        continue;
+                    }
+                }
+
                 let Some(candidate) = build_track(track) else {
                     continue;
                 };
@@ -230,5 +236,49 @@ mod tests {
             .collect();
         assert_eq!(uris, vec!["qobuz:track:1", "qobuz:track:2"]);
         assert_eq!(response.tracks[1].album.as_deref(), Some("Album"));
+    }
+
+    #[tokio::test]
+    async fn similar_tracks_deduplicates_across_backends() {
+        let seed_track = json!({
+            "uri": "qobuz:track:seed",
+            "name": "Seed",
+            "artists": [{"name": "Artist"}]
+        });
+        let backend1 = json!({
+            "tracks": [
+                {
+                    "uri": "qobuz:track:1",
+                    "name": "Track One",
+                    "artists": [{"name": "Artist"}]
+                }
+            ]
+        });
+        let backend2 = json!({
+            "tracks": [
+                {
+                    "uri": "qobuz:track:1",
+                    "name": "Track One",
+                    "artists": [{"name": "Artist"}]
+                },
+                {
+                    "uri": "qobuz:track:2",
+                    "name": "Track Two",
+                    "artists": [{"name": "Artist"}]
+                }
+            ]
+        });
+        let mopidy = StubMopidy::new(Some(seed_track), vec![backend1, backend2]);
+
+        let response = similar_tracks(&mopidy, "qobuz:track:seed", Some(10))
+            .await
+            .expect("response");
+
+        let uris: Vec<_> = response
+            .tracks
+            .iter()
+            .map(|track| track.uri.as_str())
+            .collect();
+        assert_eq!(uris, vec!["qobuz:track:1", "qobuz:track:2"]);
     }
 }
