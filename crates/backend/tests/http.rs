@@ -428,29 +428,28 @@ async fn discover_similar_rejects_bad_schemes() {
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 }
 
-use std::sync::LazyLock;
-
-static SHARED: LazyLock<Arc<Mutex<Vec<String>>>> =
-    LazyLock::new(|| Arc::new(Mutex::new(Vec::new())));
-
 #[test]
 fn health_is_ok() {
+    let shared = Mutex::new(Vec::new());
     {
-        // Lock SCOPE-BEGRENZEN: Guard droppt vor potenziellen Panics/Asserts
-        let mut guard = SHARED.lock().unwrap();
-        guard.push("start".into());
-        assert_eq!(1, guard.len());
+        let mut guard = shared.lock().unwrap();
+        guard.push("start".to_string());
+        assert_eq!(guard.as_slice(), ["start"]);
     }
-    // ab hier ist der Mutex garantiert wieder frei und nicht "vergiftet"
+    assert_eq!(shared.lock().unwrap().as_slice(), ["start"]);
 }
 
 #[test]
 fn shared_survives_other_panics() {
-    // Simulierter vorheriger Fehlerlauf: kein Gift-Effekt dank scoped lock
-    {
-        let mut g = SHARED.lock().unwrap();
-        g.push("x".into());
-    }
-    let got = SHARED.lock().unwrap().len();
-    assert!(got >= 1);
+    let shared = Mutex::new(Vec::new());
+    let result = std::panic::catch_unwind(|| {
+        {
+            let mut guard = shared.lock().unwrap();
+            guard.push("before-panic".to_string());
+        }
+        panic!("simulated failure after releasing the lock");
+    });
+
+    assert!(result.is_err());
+    assert_eq!(shared.lock().unwrap().as_slice(), ["before-panic"]);
 }

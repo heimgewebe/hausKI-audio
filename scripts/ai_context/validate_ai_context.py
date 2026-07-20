@@ -144,7 +144,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--file", help="Validate a single .ai-context.yml file")
     ap.add_argument(
-        "--templates-dir", help="Validate templates directory (metarepo)",
+        "--templates-dir",
+        help="Validate templates directory (metarepo)",
     )
     args = ap.parse_args()
 
