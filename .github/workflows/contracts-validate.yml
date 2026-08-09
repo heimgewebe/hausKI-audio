@@ -87,7 +87,7 @@ jobs:
           check_pair() {
             local wf="$1" repo="$2" ref="$3"
             [[ "$repo" == "$REQUIRED_REPO" ]] || return 0
-            if [[ "$ref" == *'${{'* || "$ref" == *'$('* || "$ref" == '$'* ]]; then
+            if [[ "$ref" == *'$'* ]]; then
               echo "::error file=$wf::Dynamic ref not allowed: $ref"; return 1
             fi
             if [[ "$ref" != "$REQUIRED_REF" ]]; then
