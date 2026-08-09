@@ -49,7 +49,6 @@ jobs:
           REQUIRED_REF: "2fd956e75c6b5f4427f7ecfd05017ba2de33831a"
         run: |
           set -euo pipefail
-          shopt -s extglob
 
           files=()
           while IFS= read -r -d '' f; do files+=("$f"); done < \
@@ -57,27 +56,38 @@ jobs:
 
           [[ ${#files[@]} -gt 0 ]] || { echo "::notice::No workflow files"; exit 0; }
 
+          trim() {
+            local value="$1"
+            value="${value#"${value%%[![:space:]]*}"}"
+            value="${value%"${value##*[![:space:]]}"}"
+            printf '%s\n' "$value"
+          }
+
           extract_pair() {
             local line="$1"
+            local value
             line="${line%%#*}"
-            line="${line##+([[:space:]])}"
-            line="${line%%+([[:space:]])}"
-            if [[ "$line" =~ ^(-[[:space:]]*)?uses:[[:space:]]*'([^']+)' ]]; then
-              echo "${BASH_REMATCH[2]}"; return 0
+            line="$(trim "$line")"
+            if [[ "$line" == "- uses:"* ]]; then
+              line="${line#- }"
             fi
-            if [[ "$line" =~ ^(-[[:space:]]*)?uses:[[:space:]]*\"([^\"]+)\" ]]; then
-              echo "${BASH_REMATCH[2]}"; return 0
+            [[ "$line" == "uses:"* ]] || return 1
+            value="$(trim "${line#uses:}")"
+            [[ -n "$value" ]] || return 1
+            if [[ "$value" == \"*\" ]]; then
+              value="${value#\"}"
+              value="${value%\"}"
+            elif [[ "$value" == \'*\' ]]; then
+              value="${value#\'}"
+              value="${value%\'}"
             fi
-            if [[ "$line" =~ ^(-[[:space:]]*)?uses:[[:space:]]*([^[:space:]#]+) ]]; then
-              echo "${BASH_REMATCH[2]}"; return 0
-            fi
-            return 1
+            printf '%s\n' "$value"
           }
 
           check_pair() {
             local wf="$1" repo="$2" ref="$3"
             [[ "$repo" == "$REQUIRED_REPO" ]] || return 0
-            if [[ "$ref" =~ (\$\{|\$\(|\$[A-Za-z_]) ]]; then
+            if [[ "$ref" == *'${{'* || "$ref" == *'$('* || "$ref" == '$'* ]]; then
               echo "::error file=$wf::Dynamic ref not allowed: $ref"; return 1
             fi
             if [[ "$ref" != "$REQUIRED_REF" ]]; then
@@ -183,6 +193,7 @@ jobs:
   validate:
     name: "Validate fixtures via reusable workflow"
     needs: [version-sync-check, guard]
+    # yamllint disable-line rule:line-length
     uses: heimgewebe/contracts-mirror/.github/workflows/contracts-ajv-reusable.yml@2fd956e75c6b5f4427f7ecfd05017ba2de33831a
     secrets: inherit
     with:
