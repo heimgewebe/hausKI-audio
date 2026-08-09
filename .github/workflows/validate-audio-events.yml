@@ -19,20 +19,20 @@ concurrency:
 jobs:
   validate-export-events:
     name: "Validate export/audio.events.jsonl"
-    uses: heimgewebe/metarepo/.github/workflows/reusable-validate-jsonl.yml@contracts-v1
+    uses: heimgewebe/metarepo/.github/workflows/reusable-validate-jsonl.yml@4a7c1a5b67fbed8903fe9a835c72f0b20b6c8505
     with:
       jsonl_path: export/audio.events.jsonl
       schema_url: >-
-        https://raw.githubusercontent.com/heimgewebe/metarepo/contracts-v1/contracts/audio.events.schema.json
+        https://raw.githubusercontent.com/heimgewebe/metarepo/4a7c1a5b67fbed8903fe9a835c72f0b20b6c8505/contracts/audio.events.schema.json
       strict: false
       validate_formats: true
 
   validate-fixtures-events:
     name: "Validate fixtures/audio/events.jsonl"
-    uses: heimgewebe/metarepo/.github/workflows/reusable-validate-jsonl.yml@contracts-v1
+    uses: heimgewebe/metarepo/.github/workflows/reusable-validate-jsonl.yml@4a7c1a5b67fbed8903fe9a835c72f0b20b6c8505
     with:
       jsonl_path: fixtures/audio/events.jsonl
       schema_url: >-
-        https://raw.githubusercontent.com/heimgewebe/metarepo/contracts-v1/contracts/audio.events.schema.json
+        https://raw.githubusercontent.com/heimgewebe/metarepo/4a7c1a5b67fbed8903fe9a835c72f0b20b6c8505/contracts/audio.events.schema.json
       strict: false
       validate_formats: true
